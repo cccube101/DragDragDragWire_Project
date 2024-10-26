@@ -3,9 +3,8 @@ using DG.Tweening;
 using Alchemy.Inspector;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using UnityEngine.UIElements;
 
-public class MoveFloorController : MonoBehaviour
+public class MoveFloorController : GimmickBase
 {
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("ˆÚ“®ƒpƒ‰ƒ[ƒ^")] private Transform[] _pos;
