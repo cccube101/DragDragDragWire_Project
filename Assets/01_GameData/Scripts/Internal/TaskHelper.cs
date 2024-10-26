@@ -30,8 +30,9 @@ namespace Helper
         /// フェードイン
         /// </summary>
         /// <returns></returns>
-        public static async UniTask FadeIn(CancellationToken ct)
+        public static async UniTask FadeIn(CanvasGroup canvas, CancellationToken ct)
         {
+            canvas.blocksRaycasts = false;
             await FadeTask(0, 1, FadeImage.ImageType.FADEIN, ct);
         }
 
@@ -77,9 +78,9 @@ namespace Helper
         /// シーン変更
         /// </summary>
         /// <param name="scene"></param>
-        public static async UniTask SceneChange(int scene, CancellationToken ct)
+        public static async UniTask SceneChange(int scene, CanvasGroup canvas, CancellationToken ct)
         {
-            await FadeIn(ct);
+            await FadeIn(canvas, ct);
 
             SceneManager.LoadScene(scene);
             Time.timeScale = 1.0f;
@@ -89,9 +90,9 @@ namespace Helper
         /// 終了
         /// </summary>
         /// <returns></returns>
-        public static async UniTask ApplicationQuit(CancellationToken ct)
+        public static async UniTask ApplicationQuit(CanvasGroup canvas, CancellationToken ct)
         {
-            await FadeIn(ct);
+            await FadeIn(canvas, ct);
 
             Audio.SaveVolume();
 

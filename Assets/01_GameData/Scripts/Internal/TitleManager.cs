@@ -21,6 +21,7 @@ public class TitleManager : MonoBehaviour
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("デバッグ")] private Helper.Switch _GUI;
 
+    [SerializeField, Required, BoxGroup("ベース")] private CanvasGroup _baseCanvas;
 
     [SerializeField, Required, BoxGroup("オーディオ")] private UnityEvent _fadeClip;
     [SerializeField, Required, BoxGroup("オーディオ")] private UnityEvent _pressAnyClip;
@@ -98,6 +99,7 @@ public class TitleManager : MonoBehaviour
 
     private void Awake()
     {
+        //  フレームレート固定
         Application.targetFrameRate = 60;
 
 #if UNITY_EDITOR
@@ -304,7 +306,7 @@ public class TitleManager : MonoBehaviour
             {
                 //  指定シーンへ移行
                 Audio.SaveVolume();
-                await Tasks.SceneChange(_scroller.Index + 1, ct);
+                await Tasks.SceneChange(_scroller.Index + 1, _baseCanvas, ct);
 
             }, AwaitOperation.Drop)
             .RegisterTo(destroyCancellationToken);

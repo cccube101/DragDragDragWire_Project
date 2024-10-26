@@ -13547,6 +13547,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _manager: {fileID: 5322156772708870197}
+  _baseCanvas: {fileID: 4012864962004163796}
   _quitYesButton: {fileID: 1818124748}
   _quitNoButton: {fileID: 547587944}
 --- !u!225 &1166714342
@@ -21862,6 +21863,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _GUI: 1
+  _baseCanvas: {fileID: 4012864962004163796}
   _fadeClip:
     m_PersistentCalls:
       m_Calls:

@@ -894,6 +894,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!225 &3117332249675630230 stripped
+CanvasGroup:
+  m_CorrespondingSourceObject: {fileID: 1553590187584447262, guid: d2b28544bf233c8409f91bad38d906d2, type: 3}
+  m_PrefabInstance: {fileID: 4525426176395175304}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &5230364945090108103 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8527695730222677839, guid: d2b28544bf233c8409f91bad38d906d2, type: 3}
@@ -1194,6 +1199,10 @@ PrefabInstance:
       propertyPath: _onDebug
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8316459430427752004, guid: fa6d77425f82ee4459623f97d566dc79, type: 3}
+      propertyPath: _baseCanvas
+      value: 
+      objectReference: {fileID: 3117332249675630230}
     - target: {fileID: 8316459430427752004, guid: fa6d77425f82ee4459623f97d566dc79, type: 3}
       propertyPath: _restartBtn
       value: 
