@@ -26,18 +26,21 @@ public class PortalController : MonoBehaviour
     // ---------------------------- UnityMessage
     private void Start()
     {
-        _ringScaleInit = _fadeRing.transform.localScale.x;
-        _fadeRing.color = new Color(_color.r, _color.g, _color.b, 0);
+        //  初期パラメータ保存
+        _ringScaleInit = _fadeRing.transform.localScale.x;  //  サイズ
+        _fadeRing.color = new Color(_color.r, _color.g, _color.b, 0);   //  色
     }
 
     private async void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag(TagName.Player))
         {
+            //  色変更アニメーション開始
             FadeColor(destroyCancellationToken).Forget();
 
             async UniTask FadeColor(CancellationToken ct)
             {
+                //  変更
                 List<UniTask> toTasks = new()
                 {
                     FadeTask(_fadeValue),
@@ -45,6 +48,7 @@ public class PortalController : MonoBehaviour
                 };
                 await UniTask.WhenAll(toTasks);
 
+                //  戻す
                 List<UniTask> endTasks = new()
                 {
                     FadeTask(0),
@@ -60,7 +64,6 @@ public class PortalController : MonoBehaviour
                     .SetUpdate(true)
                     .SetLink(gameObject)
                     .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
-
                 }
 
                 async UniTask ScaleTask(float value)
@@ -70,24 +73,21 @@ public class PortalController : MonoBehaviour
                     .SetUpdate(true)
                     .SetLink(gameObject)
                     .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
-
                 }
             }
 
+            //  ワープ時拒否
             if (!_isWarping)
             {
+                //  ワープ
                 collision.transform.position = _warpPos.position;
 
                 _isWarping = true;
 
-                await Helper.Tasks.Canceled(WarpEvent(destroyCancellationToken));
-
-                async UniTask WarpEvent(CancellationToken ct)
-                {
-                    _audio.PlayOneShot(_clip);
-
-                    await Helper.Tasks.DelayTime(_duration, ct);
-                }
+                //  効果音
+                _audio.PlayOneShot(_clip);
+                //  連続でワープしないように待機
+                await Helper.Tasks.Canceled(Helper.Tasks.DelayTime(_duration, destroyCancellationToken));
 
                 _isWarping = false;
             }

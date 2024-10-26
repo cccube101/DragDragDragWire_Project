@@ -11,6 +11,8 @@ public class RespawnPoint : MonoBehaviour
 
 
 #if UNITY_EDITOR
+    //  当たり判定の可視化
+
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Helper.Switch _gizmoSwitch;
     [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Color _color;

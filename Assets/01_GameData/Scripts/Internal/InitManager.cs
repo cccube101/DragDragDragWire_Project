@@ -19,11 +19,13 @@ public class InitManager : MonoBehaviour
     // ---------------------------- UnityMessage
     private void Awake()
     {
+        //  データ初期化
         Data.Init(_mixer);
     }
 
     private void Start()
     {
+        //  シーン遷移
         SceneManager.LoadScene((int)SceneName.Title);
         Time.timeScale = 1.0f;
     }
@@ -35,9 +37,6 @@ public class InitManager : MonoBehaviour
 
 
     // ---------------------------- PrivateMethod
-
-
-
 #if UNITY_EDITOR
     [Button]
     public void DataLog()

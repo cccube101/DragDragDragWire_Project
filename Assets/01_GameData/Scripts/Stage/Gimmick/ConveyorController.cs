@@ -1,6 +1,5 @@
 using Alchemy.Inspector;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class ConveyorController : MonoBehaviour
 {
@@ -14,6 +13,9 @@ public class ConveyorController : MonoBehaviour
 
 
 #if UNITY_EDITOR
+    //  SpriteRendererのサイズに合わせてNavMesh用のコリジョンを生成
+    //  インスペクターに合わせてSpriteRendererのサイズを変更
+
     // ---------------------------- SerializeField
     [Title("Transform からの scale 変更不可、以下 Inspector 上で編集")]
     [SerializeField, Required, BoxGroup("スケールパラメータ")] private Transform _navScale;

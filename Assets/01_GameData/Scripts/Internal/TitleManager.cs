@@ -88,7 +88,7 @@ public class TitleManager : MonoBehaviour
 
     private bool _isVolumeFrameUp = false;
 
-    private Tweener _pressAnyDefaultAnime;
+    private Tweener _pressAnyIdleAnime;
 
     // ---------------------------- Property
     public Vector2 QuitFadeValue => _quitFadeValue;
@@ -102,7 +102,9 @@ public class TitleManager : MonoBehaviour
         //  フレームレート固定
         Application.targetFrameRate = 60;
 
+        //  スコア初期化
 #if UNITY_EDITOR
+        //  データが無かったら
         if (Data.ScoreList.Count == 0)
         {
             Data.ScoreInit();
@@ -112,12 +114,11 @@ public class TitleManager : MonoBehaviour
 
     private async void Start()
     {
-
-
         ParamImplement();   //  パラメータ保存
         EventObserve(); //  イベント監視
 
-        await Tasks.Canceled(StartEvent(destroyCancellationToken)); //  スタート時処理
+        //  スタート時処理
+        await Tasks.Canceled(StartEvent(destroyCancellationToken));
     }
 
     private void OnGUI()
@@ -141,13 +142,18 @@ public class TitleManager : MonoBehaviour
     /// <summary>
     /// ゲーム開始
     /// </summary>
-    /// <param name="ctx"></param>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public async void OnAny(InputAction.CallbackContext ctx)
     {
+        //  入力判定
+        //  ステート判定
+        //  UIの移動判定
         if (ctx.phase == InputActionPhase.Performed
             && _state.Value == State.TITLE
             && !_isMoveCanvas)
         {
+            //  待機処理
+            //  アニメーションが開始、終了する前にもう一度ステート変更されてしまうため待機処理を挟む
             await Tasks.DelayTime(0.1f, destroyCancellationToken);
             _state.Value = State.STAGESELECT;
         }
@@ -156,30 +162,35 @@ public class TitleManager : MonoBehaviour
     /// <summary>
     /// ゲーム終了
     /// </summary>
-    /// <param name="ctx"></param>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public async void OnGameQuit(InputAction.CallbackContext ctx)
     {
+        //  ステート判定
+        //  UI移動判定
         if (_state.Value == State.STAGESELECT
             && !_isMoveCanvas)
         {
+            //  ゲーム終了画面表示
             await FadeQuitCanvas(true, _quitFadeValue.x, _quitFadeValue.y, destroyCancellationToken);
         }
     }
 
     /// <summary>
-    /// ゲーム終了キャンバスフェード処理
+    /// ゲーム終了キャンバス表示非表示処理
     /// </summary>
-    /// <param name="isOpen"></param>
-    /// <param name="from"></param>
-    /// <param name="to"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="isOpen">UI移動状態</param>
+    /// <param name="from">フェード開始状態</param>
+    /// <param name="to">フェード終了状態</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>ゲーム終了キャンバス表示非表示処理</returns>
     public async UniTask FadeQuitCanvas(bool isOpen, float from, float to, CancellationToken ct)
     {
+        //  状態更新
         _isMoveCanvas = isOpen;
         _stageSelectCanvasGroup.blocksRaycasts = !isOpen;
         _quitCanvas.gameObject.SetActive(true);
 
+        //  フェード
         await DOVirtual.Float(from, to, _quitFadeDuration, fade =>
         {
             _quitCanvas.alpha = fade;
@@ -188,6 +199,7 @@ public class TitleManager : MonoBehaviour
         .SetLink(_quitCanvas.gameObject)
         .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
 
+        //  状態更新
         _quitCanvas.gameObject.SetActive(isOpen);
     }
 
@@ -213,44 +225,59 @@ public class TitleManager : MonoBehaviour
         //  ステート監視
         _state.SubscribeAwait(async (state, ct) =>
         {
+            //  UI移動中
             _isMoveCanvas = true;
             switch (state)
             {
                 case State.TITLE:
+                    //  UI判定ブロック
                     _stageSelectCanvasGroup.blocksRaycasts = false;
 
+                    //  キャンバス移動
                     await MoveCanvas(0, -Base.HEIGHT, ct);
+                    //  ステージキャンバス非表示
                     _stageCanvas.SetActive(false);
 
+                    //  UI判定再開
                     _stageSelectCanvasGroup.blocksRaycasts = true;
 
                     break;
 
                 case State.STAGESELECT:
+                    //  UI判定ブロック
                     _stageSelectCanvasGroup.blocksRaycasts = false;
 
+                    //  ステージキャンバス表示
                     _stageCanvas.SetActive(true);
 
-                    _pressAnyDefaultAnime.Kill();
+                    //  アイドルアニメーションを停止
+                    _pressAnyIdleAnime.Kill();
 
+                    //  テキスト周囲でエフェクト再生
                     _pressAnyEffect.Play();
                     _pressAnyClip?.Invoke();
-
+                    //  アニメーション
                     await _pressAny.DOScale(_pressAnyPushSize, _pressAnyPushDuration)
                             .SetEase(Ease.OutBack)
                             .SetUpdate(true)
                             .SetLink(_pressAny.gameObject)
                             .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
 
+                    //  すぐにキャンバスを移動せずに待機
                     await Tasks.DelayTime(_pressAnyDelay, ct);
 
+                    //  キャンバス移動
                     await MoveCanvas(Base.HEIGHT, 0, ct);
 
-                    //  スコア表示
+                    // --- スコア表示
+                    //  スケールアニメーション
                     await ScoreBoardSize(_scoreBoardScale);
+                    //  カウントアニメーション
                     await CountTask(_totalScoreText, Data.TotalScore, "0", _countDuration, ct);
                     await CountTask(_averageTimeText, Data.AverageTime, "0.00", _countDuration, ct);
+                    //  待機
                     await Tasks.DelayTime(_scoreBoardDuration, ct);
+                    //  通常サイズに戻す
                     await ScoreBoardSize(1);
 
 
@@ -278,6 +305,7 @@ public class TitleManager : MonoBehaviour
                             .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
                     }
 
+                    //  UI判定再開
                     _stageSelectCanvasGroup.blocksRaycasts = true;
 
                     break;
@@ -291,11 +319,17 @@ public class TitleManager : MonoBehaviour
         _backTitleButton.OnClickAsObservable()
             .SubscribeAwait(async (_, ct) =>
             {
+                //  ステート判定
                 if (_state.Value == State.STAGESELECT)
                 {
+                    //  オーディオ保存
                     Audio.SaveVolume();
+
+                    //  オーディオフレーム位置初期化
                     await MoveY(_volumeFrame.gameObject, _volumeFrame, _volumeFramePos.x, _volumeFrameDuration, _volumeMoveEase, ct);
-                    _pressAnyDefaultAnime = PressAnyAnimation();
+
+                    //  テキストアイドルアニメーション再生
+                    _pressAnyIdleAnime = PressAnyAnimation();
                     _state.Value = State.TITLE;
                 }
             }, AwaitOperation.Drop)
@@ -304,8 +338,9 @@ public class TitleManager : MonoBehaviour
         _playButton.OnClickAsObservable()
             .SubscribeAwait(async (_, ct) =>
             {
-                //  指定シーンへ移行
+                //  オーディオ保存
                 Audio.SaveVolume();
+                //  指定シーンへ移行
                 await Tasks.SceneChange(_scroller.Index + 1, _baseCanvas, ct);
 
             }, AwaitOperation.Drop)
@@ -314,8 +349,11 @@ public class TitleManager : MonoBehaviour
         _volumeButton.OnClickAsObservable()
             .SubscribeAwait(async (_, ct) =>
             {
+                //  オーディオフレームの移動状態
                 _isVolumeFrameUp = !_isVolumeFrameUp;
+                //  移動先指定
                 var pos = _isVolumeFrameUp ? _volumeFramePos.y : _volumeFramePos.x;
+                //  移動
                 await MoveY(_volumeFrame.gameObject, _volumeFrame, pos, _volumeFrameDuration, _volumeMoveEase, ct);
 
             }, AwaitOperation.Drop)
@@ -324,6 +362,7 @@ public class TitleManager : MonoBehaviour
         _quitButton.OnClickAsObservable()
              .SubscribeAwait(async (_, ct) =>
              {
+                 // 終了画面表示
                  await FadeQuitCanvas(true, _quitFadeValue.x, _quitFadeValue.y, ct);
 
              }, AwaitOperation.Drop)
@@ -331,10 +370,10 @@ public class TitleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// スタート時処理
+    /// スタートイベント
     /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>スタートイベント処理</returns>
     private async UniTask StartEvent(CancellationToken ct)
     {
         //  オプション位置初期化
@@ -358,24 +397,28 @@ public class TitleManager : MonoBehaviour
             .SetUpdate(true)
             .SetLink(gameObject);
 
-        _pressAnyDefaultAnime = PressAnyAnimation();
+        _pressAnyIdleAnime = PressAnyAnimation();
 
-        //  パーティクル再生ループ
-        ParticleLoop(ct).Forget();
-        async UniTask ParticleLoop(CancellationToken ct)
+        //  アニメーション再生ループ
+        AnimationLoop(ct).Forget();
+        async UniTask AnimationLoop(CancellationToken ct)
         {
             await Helper.Tasks.DelayTime(_particleDuration, ct);
             while (true)
             {
+                //  フック部分アニメーション
                 await _lineRect.DOAnchorPosX(_lineMinMax.y, _animeDuration)
                     .SetEase(Ease.Linear)
                     .SetLink(_lineRect.gameObject)
                     .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
 
+                //  先端部分でエフェクト再生
                 _headParticle.Play();
 
+                //  待機処理
                 await Helper.Tasks.DelayTime(_particleDuration, ct);
 
+                //  フック部分戻すアニメーション
                 await _lineRect.DOAnchorPosX(_lineMinMax.x, _animeDuration)
                     .SetEase(Ease.Linear)
                     .SetLink(_lineRect.gameObject)
@@ -387,9 +430,10 @@ public class TitleManager : MonoBehaviour
     /// <summary>
     /// 呼び出し用アニメーション
     /// </summary>
-    /// <returns></returns>
+    /// <returns>アニメーション</returns>
     private Tweener PressAnyAnimation()
     {
+        //  スケール初期化
         _pressAny.transform.localScale = Vector3.one;
 
         return _pressAny.DOScale(_pressAnySize, _pressAnyDuration)
@@ -402,14 +446,16 @@ public class TitleManager : MonoBehaviour
     /// <summary>
     /// キャンバス移動
     /// </summary>
-    /// <param name="logoPos"></param>
-    /// <param name="stagePos"></param>
-    /// <returns></returns>
+    /// <param name="logoPos">タイトルロゴ位置</param>
+    /// <param name="stagePos">ステージ選択画面位置</param>
+    /// <returns>キャンバス移動処理</returns>
     private async UniTask MoveCanvas(float logoPos, float stagePos, CancellationToken ct)
     {
         var moveTasks = new List<UniTask>()
             {
+                //  タイトルロゴ移動
                 MoveY(_logoCanvas,_logoRect, logoPos, _canvasMoveDuration, _canvasMoveEase, ct),
+                //  ステージ選択画面移動
                 MoveY(_stageCanvas, _stageRect, stagePos, _canvasMoveDuration, _canvasMoveEase, ct),
             };
         await UniTask.WhenAll(moveTasks);
@@ -418,13 +464,13 @@ public class TitleManager : MonoBehaviour
     /// <summary>
     /// Y軸移動
     /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="rect"></param>
-    /// <param name="toValue"></param>
-    /// <param name="duration"></param>
-    /// <param name="ease"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="obj">移動オブジェクト</param>
+    /// <param name="rect">レクトトランスフォーム</param>
+    /// <param name="toValue">終了位置</param>
+    /// <param name="duration">アニメーション時間</param>
+    /// <param name="ease">イーズ</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>移動処理</returns>
     private async UniTask MoveY
         (GameObject obj
         , RectTransform rect

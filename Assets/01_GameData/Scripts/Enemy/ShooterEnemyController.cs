@@ -32,13 +32,17 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
     // ---------------------------- UnityMessage
     private async void Start()
     {
+        //  キャッシュ
         _sr = GetComponent<SpriteRenderer>();
         _rb = GetComponent<Rigidbody2D>();
+
+        //  射撃サイクル開始
         await Helper.Tasks.Canceled(ShooterCycle(destroyCancellationToken));
     }
 
     private void Update()
     {
+        //  移動処理
         Move();
     }
 
@@ -49,10 +53,12 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
     /// <summary>
     /// プレイヤーへのダメージ
     /// </summary>
-    public int Damage(GameObject obj)
+    /// <param name="player">プレイヤーオブジェクト</param>
+    /// <returns>ダメージ量</returns>
+    public int Damage(GameObject player)
     {
-        var dir = (obj.transform.position - transform.position).normalized;
-        obj.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
+        var dir = (player.transform.position - transform.position).normalized;
+        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
         return _damage;
     }
 
@@ -72,26 +78,30 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
     /// <summary>
     /// 射撃サイクル
     /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>射撃サイクル</returns>
     private async UniTask ShooterCycle(CancellationToken ct)
     {
         while (true)
         {
+            //  画面内にオブジェクトがあるかどうか
             if (_sr.isVisible)
             {
+                //  指定数射撃
                 for (int i = 0; i < _generationVolume; i++)
                 {
-                    //  パラメータ
+                    //  パラメータ生成
                     var bullet = Instantiate(_bulletObj, transform.position, Quaternion.identity);
                     var dir = _muzzle.transform.position - transform.position;
 
-                    //  移動
+                    //  弾方向指定
                     bullet.GetComponent<BulletController>().Dir = (dir, transform.rotation);
 
+                    //  待機
                     await Helper.Tasks.DelayTime(_generationRate, ct);
                 }
             }
+            //  待機
             await Helper.Tasks.DelayTime(_generationInterval, ct);
             await UniTask.Yield(cancellationToken: ct);
         }
@@ -102,9 +112,10 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
     /// </summary>
     private void Move()
     {
+        //  画面内にオブジェクトがあるかどうか
         if (_sr.isVisible)
         {
-            var playerPos = PlayerController.Instance.transform.position;
+            var playerPos = PlayerController.Instance.transform.position;   //  プレイヤー位置取得
 
             //  プレイヤー方向へ回転
             var dir = Vector3.Lerp(playerPos, transform.position, LOOK);
@@ -113,6 +124,7 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
         }
         else
         {
+            //  停止
             _rb.Sleep();
         }
     }

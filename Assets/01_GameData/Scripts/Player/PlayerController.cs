@@ -12,7 +12,6 @@ using System.Threading;
 using R3.Triggers;
 using System.Collections.Generic;
 using Helper;
-using static UnityEngine.Rendering.DebugUI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -116,7 +115,7 @@ public class PlayerController : MonoBehaviour
     // ---------------------------- OnGUI
     private void OnGUI()
     {
-        if (GameManager.Instance.OnDebug && _GUI == Switch.ON)
+        if (_GUI == Switch.ON)
         {
             var pos = Base.LogParam.pos;
             var style = Base.LogParam.style;
@@ -130,14 +129,17 @@ public class PlayerController : MonoBehaviour
     // ---------------------------- UnityMessage
     private void Awake()
     {
+        //  キャッシュ
         _instance = this;
+        _rb = GetComponent<Rigidbody2D>();
 
-        //  ロープ先端位置
+        //  ロープ先端位置 種類名保存
         foreach (var type in Enum.GetValues(typeof(LineType)).Cast<LineType>())
         {
             _headPos.Add(type, Vector3.zero);
         }
-        _rb = GetComponent<Rigidbody2D>();
+
+        //  HP初期化
         _hp.Value = _maxHp;
     }
 
@@ -173,21 +175,23 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// スティック入力
     /// </summary>
-    /// <param name="ctx"></param>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public void OnLook(InputAction.CallbackContext ctx)
     {
+        //  ロープ方向入力
         _lookPos = transform.position + (Vector3)ctx.ReadValue<Vector2>();
-
     }
 
     /// <summary>
     /// マウス位置入力
     /// </summary>
-    /// <param name="ctx">コンテキスト</param>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public void OnAim(InputAction.CallbackContext ctx)
     {
+        //  カメラ取得
         if (Camera.main != null)
         {
+            //  マウス位置更新
             var camera = Camera.main.ScreenToWorldPoint((Vector3)ctx.ReadValue<Vector2>());
             camera.z = 0;
             _lookPos = camera;
@@ -197,7 +201,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// 射出入力
     /// </summary>
-    /// <param name="ctx">コンテキスト</param>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public void OnHookShot(InputAction.CallbackContext ctx)
     {
         _shotPhase = ctx.phase;
@@ -206,6 +210,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// ポーズ
     /// </summary>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public void OnPause(InputAction.CallbackContext ctx)
     {
         GameManager.Instance.ChangeState(GameState.PAUSE);
@@ -214,6 +219,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// バック
     /// </summary>
+    /// <param name="ctx">コールバックコンテキスト</param>
     public void OnBack(InputAction.CallbackContext ctx)
     {
         GameManager.Instance.ChangeState(GameState.DEFAULT);
@@ -227,6 +233,7 @@ public class PlayerController : MonoBehaviour
         //  Scheme文字列をEnumで判定
         var schemeString = GetComponent<PlayerInput>().currentControlScheme;
 
+        //  入力方法分岐
         if (schemeString == Helper.Scheme.KeyboardMouse.ToString())
         {
             _scheme.Value = Helper.Scheme.KeyboardMouse;
@@ -251,6 +258,7 @@ public class PlayerController : MonoBehaviour
         //  ステートイベント
         GameManager.Instance.State.Subscribe(state =>
         {
+            //  ステート分岐
             switch (state)
             {
                 case GameState.DEFAULT:
@@ -282,6 +290,7 @@ public class PlayerController : MonoBehaviour
             _isHookAnimation = true;
             try
             {
+                //  フックアクティブ判定
                 if (active)
                 {
                     await ActiveTask(ct);
@@ -295,6 +304,7 @@ public class PlayerController : MonoBehaviour
             {
                 _isHookAnimation = false;
             }
+            //  色初期化
             GetComponent<SpriteRenderer>().color = _initColor;
 
         }, AwaitOperation.Switch)
@@ -319,6 +329,7 @@ public class PlayerController : MonoBehaviour
             //  UnHitのとき、フックを戻す
             if ((_isFirstHookProcess && _activeHitPos == HitCollider.UnHit))
             {
+                //  効果音再生
                 _unHitClip?.Invoke();
                 //  点滅処理
                 await DOVirtual.Color(Color.black, _initColor
@@ -332,11 +343,13 @@ public class PlayerController : MonoBehaviour
                 .SetLink(gameObject)
                 .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
 
+                //  状態を戻す
                 _isFirstHookProcess = false;
                 _isHookActive.Value = false;
             }
             else
             {
+                //  効果音再生
                 _hitClip?.Invoke();
             }
         }
@@ -499,12 +512,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+
+
     /// <summary>
     /// 被ダメージ
     /// </summary>
-    /// <param name="damage"></param>
+    /// <param name="damage">ダメージ量</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>被ダメージ処理</returns>
     private async UniTask DamageTaken(int damage, CancellationToken ct)
     {
+        //  ダメージ受付可否
         if (_canDamageTaken)
         {
             _canDamageTaken = false;
@@ -553,7 +571,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            _isFirstHookProcess = true;
+            _isFirstHookProcess = true; //  入力がなくなったら初期化
             HookInactive();
         }
 
@@ -563,11 +581,11 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// 起動時処理
     /// </summary>
-    /// <param name="type"></param>
     private void HookActive()
     {
-        var playerPos = transform.position;
-        var type = GetHitColliderType();
+        //  パラメータ取得
+        var playerPos = transform.position; //  プレイヤー位置
+        var type = GetHitColliderType();    //  接触コライダーの種類
 
         //  接触判定
         if (!_isHookHit)
@@ -640,6 +658,7 @@ public class PlayerController : MonoBehaviour
                 _isHookActive.Value = hookActive;
             }
 
+            //  入力
             _moveForce = force;
 
         }

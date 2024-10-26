@@ -12,6 +12,11 @@ namespace FancyScrollView.Example03
 {
     class StageFrame : FancyCell<ItemData, Context>
     {
+        static class AnimatorHash
+        {
+            public static readonly int Scroll = Animator.StringToHash("scroll");
+        }
+
         // ---------------------------- SerializeField
         [SerializeField] Animator animator = default;
         [SerializeField] Button button = default;
@@ -29,12 +34,9 @@ namespace FancyScrollView.Example03
 
         // ---------------------------- Field
 
-        // ---------------------------- Method
-        static class AnimatorHash
-        {
-            public static readonly int Scroll = Animator.StringToHash("scroll");
-        }
 
+
+        // ---------------------------- Method
         void Start()
         {
             button.onClick.AddListener(() => Context.OnCellClicked?.Invoke(Index));
@@ -42,13 +44,16 @@ namespace FancyScrollView.Example03
 
         public override void UpdateContent(ItemData itemData)
         {
+            //  選ばれているステージのパラメータを取得
             var selectStage = Index + 1;
             var sceneEnum = (SceneName)selectStage;
             var scoreList = Helper.Data.ScoreList[sceneEnum.ToString()];
 
+            //  ステージ名テキスト更新
             _numberText.text = selectStage.ToString();
             _stageText.text = sceneEnum.ToString();
 
+            //  イメージ更新
             for (int i = 0; i < _coinObj.Length; i++)
             {
                 _coinObj[i].SetActive(i < scoreList.Coin);
@@ -57,6 +62,8 @@ namespace FancyScrollView.Example03
             {
                 _hpObj[i].SetActive(i < scoreList.HP);
             }
+
+            //  スコアテキスト更新
             _timeText.text = scoreList.Time.ToString("00.00");
             _scoreText.text = scoreList.Score.ToString();
             _topTimeText.text = Helper.Data.TopTimeList[sceneEnum.ToString()].ToString("0.00");
@@ -65,6 +72,10 @@ namespace FancyScrollView.Example03
 
         public override void UpdatePosition(float position)
         {
+            //  選択して中心に来たら効果音を再生
+            //  現在のポジションが一定以上ずれているか判定
+            //  最終位置のポジションのずれの許容範囲を判定
+            //  再生中か判定
             if ((currentPosition < -0.1 || 0.1 < currentPosition)
                 && -0.1 < position && position < 0.1
                 && !_audio.isPlaying)
@@ -72,13 +83,16 @@ namespace FancyScrollView.Example03
                 _audio.PlayOneShot(_clip);
             }
 
+            //  ポジション変数の更新
             currentPosition = position;
 
+            // アニメーターの更新
             if (animator.isActiveAndEnabled)
             {
                 animator.Play(AnimatorHash.Scroll, -1, position);
             }
 
+            //  移動停止
             animator.speed = 0;
         }
 

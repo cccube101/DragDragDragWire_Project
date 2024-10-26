@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Helper;
@@ -12,8 +11,6 @@ public class GameManager : MonoBehaviour
 {
 
     // ---------------------------- SerializeField
-    [SerializeField, Required, BoxGroup("デバッグスイッチ")] private Switch _onDebug;
-
     [SerializeField, Required, BoxGroup("フェードSE")] private UnityEvent _fadeClip;
 
     [SerializeField, Required, BoxGroup("ベース")] private CanvasGroup _baseCanvas;
@@ -45,7 +42,6 @@ public class GameManager : MonoBehaviour
 
     // ---------------------------- Property
     public static GameManager Instance => _instance;
-    public bool OnDebug => _onDebug == Switch.ON;
 
     public float LimitTime => Helper.Data.LimitTime;
     public (int Points, int Count) Score => (_points, _coinCount);
@@ -57,7 +53,7 @@ public class GameManager : MonoBehaviour
     // ---------------------------- UnityMessage
     private void Awake()
     {
-
+        //  シングルトンキャッシュ
         _instance = this;
 
 #if UNITY_EDITOR
@@ -92,14 +88,10 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        //  デフォルトステータス時更新
         if (_state.Value == GameState.DEFAULT)
         {
             _currentTime.Value -= Time.deltaTime;   //  時間更新
-        }
-
-        if (OnDebug)
-        {
-            BaseDebug();
         }
     }
 
@@ -109,7 +101,7 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// ステート変更
     /// </summary>
-    /// <param name="state"></param>
+    /// <param name="state">変更したいステート先</param>
     public void ChangeState(GameState state)
     {
         SetState(state);
@@ -118,9 +110,10 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// スコア入力
     /// </summary>
-    /// <param name="item"></param>
+    /// <param name="item">スコア</param>
     public void SetScore(int point)
     {
+        //  スコア更新
         _points += point;
         _coinCount++;
     }
@@ -146,6 +139,7 @@ public class GameManager : MonoBehaviour
         //  ------  HP
         PlayerController.Instance.HP.Subscribe(hp =>
         {
+            //  ゲームオーバー分岐
             if (hp <= 0)
             {
                 SetState(GameState.GAMEOVER);
@@ -160,6 +154,7 @@ public class GameManager : MonoBehaviour
         _btn_optionBack.OnClickAsObservable()
         .Subscribe(_ =>
         {
+            //  デフォルトに変更
             SetState(GameState.DEFAULT);
         })
         .AddTo(this);
@@ -167,7 +162,7 @@ public class GameManager : MonoBehaviour
         _btn_optionRetry.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-
+            //  シーン遷移
             await Tasks.SceneChange(current, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -175,6 +170,7 @@ public class GameManager : MonoBehaviour
         _btn_optionTitle.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
+            //  シーン遷移
             await Tasks.SceneChange((int)SceneName.Title, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -184,6 +180,7 @@ public class GameManager : MonoBehaviour
         _btn_clearRetry.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
+            //  シーン遷移
             await Tasks.SceneChange(current, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -191,6 +188,7 @@ public class GameManager : MonoBehaviour
         _btn_clearTitle.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
+            //  シーン遷移
             await Tasks.SceneChange((int)SceneName.Title, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -198,6 +196,7 @@ public class GameManager : MonoBehaviour
         _btn_clearNext.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
+            //  シーン遷移
             await Tasks.SceneChange(current + 1, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -207,6 +206,7 @@ public class GameManager : MonoBehaviour
         _btn_overRetry.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
+            //  シーン遷移
             await Tasks.SceneChange(current, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -214,6 +214,7 @@ public class GameManager : MonoBehaviour
         _btn_overTitle.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
+            //  シーン遷移
             await Tasks.SceneChange((int)SceneName.Title, _baseCanvas, ct);
         })
         .AddTo(this);
@@ -222,10 +223,11 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// ステートの変更
     /// </summary>
-    /// <param name="state"></param>
-    /// <returns></returns>
+    /// <param name="state">変更したいステート先</param>
+    /// <returns>ステート変更結果</returns>
     private void SetState(GameState state)
     {
+        //  分岐
         switch (state)
         {
             case GameState.DEFAULT:
@@ -242,75 +244,15 @@ public class GameManager : MonoBehaviour
         //  判定
         void Decision(GameState decisionValue)
         {
+            //  遷移中か同か
+            //  UIが移動しているかどうか
+            //  ステートが変更可能なステートかどうか
             if (!Tasks.IsFade
                 && !UIController.Instance.IsMoveMenu
                 && _state.Value == decisionValue)
             {
                 _state.Value = state;
             }
-        }
-    }
-
-
-
-    /// <summary>
-    /// デバッグ
-    /// </summary>
-    private void BaseDebug()
-    {
-        var current = Keyboard.current;
-        var oneKey = current.digit1Key;
-        var twoKey = current.digit2Key;
-        var threeKey = current.digit3Key;
-        var fourKey = current.digit4Key;
-        var fiveKey = current.digit5Key;
-        var sixKey = current.digit6Key;
-
-        if (oneKey.wasPressedThisFrame)
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false; //ゲームシーン終了
-#else
-            Application.Quit(); //build後にゲームプレイ終了が適用
-#endif
-        }
-        if (twoKey.wasPressedThisFrame)
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            Time.timeScale = 1.0f;
-        }
-        if (threeKey.wasPressedThisFrame)
-        {
-
-        }
-        if (fourKey.wasPressedThisFrame)
-        {
-
-        }
-        if (fiveKey.wasPressedThisFrame)
-        {
-
-        }
-        if (sixKey.wasPressedThisFrame)
-        {
-
-        }
-
-        var uKey = current.uKey;
-        var jKey = current.jKey;
-        var pKey = current.pKey;
-
-        if (uKey.wasPressedThisFrame)
-        {
-
-        }
-        if (jKey.wasPressedThisFrame)
-        {
-
-        }
-        if (pKey.wasPressedThisFrame)
-        {
-
         }
     }
 }

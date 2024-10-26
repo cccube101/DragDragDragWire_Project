@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -7,12 +7,12 @@ using UnityEngine.UI;
 namespace Helper
 {
     /// <summary>
-    /// �����p�����[�^����
+    /// 音声パラメータ処理
     /// </summary>
     public static class Audio
     {
         /// <summary>
-        /// �p�����[�^�ۑ��N���X
+        /// パラメータ保存クラス
         /// </summary>
         public class Param
         {
@@ -40,10 +40,11 @@ namespace Helper
 
         // ---------------------------- PublicMethod
         /// <summary>
-        /// �p�����[�^�쐬
+        /// パラメータ作成
         /// </summary>
         public static void CreateParam()
         {
+            //  生成
             Create(MASTER);
             Create(BGM);
             Create(SE);
@@ -51,42 +52,48 @@ namespace Helper
             static void Create(string group)
             {
                 _params.Add(group, new Param(PlayerPrefs.GetFloat(group), null));
-
             }
         }
 
 
         /// <summary>
-        /// ���ʏ�����
+        /// 音量初期化
         /// </summary>
-        /// <param name="mixer"></param>
+        /// <param name="mixer">音量ミキサー</param>
         public static void InitParam(AudioMixer mixer)
         {
+            //  ミキサーグループ数分処理
             foreach (var param in _params)
             {
+                //  データ取得
                 mixer.GetFloat(param.Key.ToString(), out float value);
+                //  データ更新
                 param.Value.Volume = Mathf.Clamp((float)Math.Pow(10, value / 20), 0f, 1f);
             }
         }
 
         /// <summary>
-        /// ���ʕۑ�
+        /// 音量保存
         /// </summary>
         public static void SaveVolume()
         {
+            //  ミキサーグループ数分処理
             foreach (var param in _params)
             {
+                //  データ保存
                 PlayerPrefs.SetFloat(param.Key, param.Value.Volume);
             }
         }
 
         /// <summary>
-        /// ���ʎ擾
+        /// 音量取得
         /// </summary>
         public static void LoadVolume()
         {
+            //  ミキサーグループ数分処理
             foreach (var param in _params)
             {
+                //  データ更新
                 param.Value.Volume = PlayerPrefs.GetFloat(param.Key);
             }
         }
