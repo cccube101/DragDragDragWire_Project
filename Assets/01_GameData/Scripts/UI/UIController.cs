@@ -160,17 +160,18 @@ public class UIController : MonoBehaviour
     /// </summary>
     private void ImplementParam()
     {
-        //  ボタン
+        //  ボタンキャッシュ
         _selectButtons = new()
         {
             {GameState.PAUSE, _pauseButton},
             {GameState.GAMECLEAR ,_clearButton},
             {GameState.GAMEOVER, _overButton},
         };
-        //  フレームレクト
+
+        //  フレームレクトキャッシュ
         _optionFrameRect = _optionFrame.GetComponent<RectTransform>();
 
-        //  ロゴパラメータ
+        //  ロゴパラメータキャッシュ
         _gameClearParam = CreateLogoParam(_clearLogo, _gameClearLogSize);
         _gameOverParam = CreateLogoParam(_gameOverLogo, _gameOverLogSize);
         static LogoParam CreateLogoParam(GameObject obj, Vector2 scale)
@@ -192,15 +193,16 @@ public class UIController : MonoBehaviour
             _timeText.text = $"TIME {time:00}";
         })
         .AddTo(this);
-        //  アラート
+        //  残時間によりアラート開始
         Game.CurrentTime.Where((time) => !_isAlert && time <= _alertTime)
         .SubscribeAwait(async (_, ct) =>
         {
             _isAlert = true;
 
+            //  アラート回数算出
             var loopTime = (int)(_alertTime / _alertDuration);
 
-            var tcb = TweenCancelBehaviour.KillAndCancelAwait;
+            var tcb = TweenCancelBehaviour.KillAndCancelAwait;  // UniTaskへの変換時に必要な設定
             var tasks = new List<UniTask>()
             {
                 FadePanel(),
@@ -242,20 +244,26 @@ public class UIController : MonoBehaviour
                     .SetLoops(loopTime, LoopType.Yoyo)
                     .ToUniTask(tcb, cancellationToken: ct);
             }
-            //  オーディオ
+            //  オーディオ再生
             async UniTask PlayClip()
             {
+                //  ループ回数分処理
                 for (int i = 0; i < loopTime / 2; i++)
                 {
+                    //  ステート判定
                     if (Game.State.CurrentValue == GameState.DEFAULT)
                     {
+                        //  再生
                         _alertClip?.Invoke();
                     }
+                    //  待機
                     await Tasks.DelayTime(_alertDuration * 2, ct);
                 }
             }
             await UniTask.WhenAll(tasks);
 
+            //  アラート終了時イメージ更新
+            //  結果画面表示前に０に戻す
             await Fade_Img(_alertPanel, 0, _alertDuration, Ease.Linear, ct);
 
         }, AwaitOperation.Drop)
@@ -336,6 +344,7 @@ public class UIController : MonoBehaviour
         .AddTo(this);
 
         //  ------  HPイベント
+        //  HPオブジェクト
         Player.HP.SubscribeAwait(async (hp, ct) =>
         {
             //  HP入力
@@ -360,10 +369,12 @@ public class UIController : MonoBehaviour
                 //  HPオブジェクトイベント
                 void HPEvent(List<UniTask> tasks, Color startColor, Color endColor, float endScale)
                 {
+                    //  オブジェクト数分更新
                     foreach (var obj in _hpObjects)
                     {
                         if (obj != null)
                         {
+                            //  イメージの色変更
                             var img = obj.GetComponent<Image>();
                             tasks.Add(ColorChange_Img());
                             async UniTask ColorChange_Img()
@@ -379,6 +390,7 @@ public class UIController : MonoBehaviour
                                      .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
                             }
 
+                            //  スケール変更
                             var rect = obj.GetComponent<RectTransform>();
                             tasks.Add(Scale_Rect(rect, endScale, _alertHpDuration, Ease.Linear, ct));
                         }
@@ -390,6 +402,7 @@ public class UIController : MonoBehaviour
                 //  HP残基低下時アラート処理
                 var tasks = new List<UniTask>();
 
+                //  オブジェクト数分更新
                 foreach (var obj in _hpObjects)
                 {
                     if (obj != null)
@@ -423,11 +436,9 @@ public class UIController : MonoBehaviour
                 }
             }
 
-
-
         }, AwaitOperation.Drop)
         .RegisterTo(destroyCancellationToken);
-
+        //  画面全体のパネル
         Player.HP.SubscribeAwait(async (hp, ct) =>
         {
             //  インタスク
@@ -441,9 +452,10 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>
-    /// 開始イベント処理
+    /// 開始イベント
     /// </summary>
-    /// <returns></returns>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>開始イベント処理</returns>
     private async UniTask StartEvent(CancellationToken ct)
     {
         //  ステージ名
@@ -512,12 +524,13 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>
-    /// 初期選択
+    /// UI選択
     /// </summary>
     private void UISelect()
     {
-        var state = GameManager.Instance.State.CurrentValue;
+        //  スキームとステートで判定
         var scheme = PlayerController.Instance.Scheme.CurrentValue;
+        var state = GameManager.Instance.State.CurrentValue;
         //  Scheme判定
         if (scheme == Scheme.Gamepad)
         {
@@ -537,8 +550,10 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// オプション画面移動
     /// </summary>
-    /// <param name="isPause"></param>
-    /// <param name="target"></param>
+    /// <param name="isPause">ポーズ状態</param>
+    /// <param name="target">移動位置</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>オプション画面移動処理</returns>
     private async UniTask MoveOptionFrame
         (bool isPause
         , float target
@@ -577,6 +592,7 @@ public class UIController : MonoBehaviour
         , List<float> uiPos
         , CancellationToken ct)
     {
+        //  パラメータ取得
         var Game = GameManager.Instance;
         var TimeValue = Game.CurrentTime.CurrentValue;
         var remainingHour = Game.LimitTime - TimeValue;
@@ -587,15 +603,17 @@ public class UIController : MonoBehaviour
         //  ------  設定初期化
         _guide.SetActive(false);
         _resultFrame.SetActive(true);
-        //  クリア時コイン表示設定
+        //  クリア時UI表示設定
         if (State == GameState.GAMECLEAR)
         {
+            //  枚数分表示
             for (int i = 0; i < _coinObjects.Length; i++)
             {
                 _coinObjects[i].SetActive(i < Count);
             }
             _timeResultText.text = $"{remainingHour:00.00}";
 
+            //  個数分表示
             for (int i = 0; i < _heartObjects.Length; i++)
             {
                 _heartObjects[i].SetActive(i < hp);
@@ -619,18 +637,15 @@ public class UIController : MonoBehaviour
         var logoTasks = new List<UniTask>
         {
             Fade_Img(_resultPanel,_resultPanelAlpha,_logoDuration,Ease.Linear,ct),
-            Fade_Text(),
             Scale_Rect(logo.Rect,1,_logoDuration,Ease.OutBack,ct),
-            AudioFade(_bgmSource, _fadeBgmVolume, _logoDuration,ct)
-        };
-        async UniTask Fade_Text()
-        {
-            await logo.Text.DOFade(1, _logoDuration)
+            AudioFade(_bgmSource, _fadeBgmVolume, _logoDuration,ct),
+
+            logo.Text.DOFade(1, _logoDuration)
                 .SetEase(Ease.Linear)
                 .SetUpdate(true)
                 .SetLink(logo.Obj)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
-        }
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct),
+        };
 
         await UniTask.WhenAll(logoTasks);
 
@@ -640,6 +655,7 @@ public class UIController : MonoBehaviour
         //  ------  UI移動処理
         var uiTasks = new List<UniTask>();
         //  移動時間を徐々に増加
+        //  UIの数だけずらす
         for (int i = 0; i < ui.Length; i++)
         {
             var duration = _resultUIDuration + _resultUIShifting * i;
@@ -669,6 +685,7 @@ public class UIController : MonoBehaviour
         //  ------  スコア表示
         if (State == GameState.GAMECLEAR)
         {
+            //  スコア算出
             var coinScore = Points + BonusPoint(); //  コイン
             int BonusPoint()    //  ボーナス
             {
@@ -684,6 +701,7 @@ public class UIController : MonoBehaviour
             var timeScore = TimeScore(); //  時間
             int TimeScore()
             {
+                //  指定範囲によってスコア変動
                 if (TimeValue > _timeScoreLimit.x)
                 {
                     return (int)_timeScore.x;
@@ -705,7 +723,8 @@ public class UIController : MonoBehaviour
             var hpScore = hp * GET_HUNDRED;  //  HP
             var totalScore = coinScore + timeScore + hpScore;  //  合計
 
-            var indexName = ((SceneName)SceneManager.GetActiveScene().buildIndex).ToString();
+            //  スコア保存
+            var indexName = ((SceneName)SceneManager.GetActiveScene().buildIndex).ToString();   //  シーン名取得
             Data.SaveScore(indexName, Count, hp, remainingHour, totalScore);
 
             //  カウント
@@ -752,12 +771,12 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// レクト移動X
     /// </summary>
-    /// <param name="rect"></param>
-    /// <param name="endValue"></param>
-    /// <param name="duration"></param>
-    /// <param name="ease"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="rect">レクトトランスフォーム</param>
+    /// <param name="endValue">移動位置</param>
+    /// <param name="duration">移動時間</param>
+    /// <param name="ease">イース</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>移動処理</returns>
     private async UniTask MoveX_Rect
         (RectTransform rect
         , float endValue
@@ -775,12 +794,12 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// レクト移動Y
     /// </summary>
-    /// <param name="rect"></param>
-    /// <param name="endValue"></param>
-    /// <param name="duration"></param>
-    /// <param name="ease"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="rect">レクトトランスフォーム</param>
+    /// <param name="endValue">移動位置</param>
+    /// <param name="duration">移動時間</param>
+    /// <param name="ease">イース</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>移動処理</returns>
     private async UniTask MoveY_Rect
         (RectTransform rect
         , float endValue
@@ -796,12 +815,13 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>
-    /// オーディオフェード
+    /// 音量フェード
     /// </summary>
-    /// <param name="source"></param>
-    /// <param name="endValue"></param>
-    /// <param name="duration"></param>
-    /// <returns></returns>
+    /// <param name="source">変更オーディオソース</param>
+    /// <param name="endValue">変更値</param>
+    /// <param name="duration">変更時間</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>音量フェード処理</returns>
     private async UniTask AudioFade
         (AudioSource source
         , float endValue
@@ -823,12 +843,12 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// 拡大縮小
     /// </summary>
-    /// <param name="rect"></param>
-    /// <param name="endValue"></param>
-    /// <param name="duration"></param>
-    /// <param name="ease"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="rect">レクトトランスフォーム</param>
+    /// <param name="endValue">変更値</param>
+    /// <param name="duration">変更時間</param>
+    /// <param name="ease">イース</param>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>拡縮処理</returns>
     private async UniTask Scale_Rect
         (RectTransform rect
         , float endValue
@@ -846,11 +866,11 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// フェード_Image
     /// </summary>
-    /// <param name="img"></param>
-    /// <param name="endValue"></param>
-    /// <param name="duration"></param>
-    /// <param name="ease"></param>
-    /// <param name="ct"></param>
+    /// <param name="img">変更イメージ</param>
+    /// <param name="endValue">変更値</param>
+    /// <param name="duration">変更時間</param>
+    /// <param name="ease">イース</param>
+    /// <param name="ct">キャンセルトークン</param>
     /// <returns></returns>
     private async UniTask Fade_Img
         (Image img

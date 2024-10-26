@@ -28,6 +28,7 @@ public class TrackingEnemyController : MonoBehaviour, IEnemyDamageable
     // ---------------------------- UnityMessage
     private void Start()
     {
+        //  キャッシュ
         _sr = GetComponent<SpriteRenderer>();
         _rb = GetComponent<Rigidbody2D>();
         _agent = GetComponent<NavMeshAgent>();
@@ -35,6 +36,7 @@ public class TrackingEnemyController : MonoBehaviour, IEnemyDamageable
 
     private void Update()
     {
+        //  移動処理
         Move();
     }
 
@@ -46,11 +48,13 @@ public class TrackingEnemyController : MonoBehaviour, IEnemyDamageable
     /// <summary>
     /// プレイヤーへのダメージ
     /// </summary>
-    public int Damage(GameObject obj)
+    /// <param name="player">プレイヤーオブジェクト</param>
+    /// <returns>ダメージ量</returns>
+    public int Damage(GameObject player)
     {
         //  ノックバック
-        var dir = (obj.transform.position - transform.position).normalized;
-        obj.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
+        var dir = (player.transform.position - transform.position).normalized;
+        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
 
         //  ダメージ
         return _damage;
@@ -61,8 +65,11 @@ public class TrackingEnemyController : MonoBehaviour, IEnemyDamageable
     /// </summary>
     public void Die()
     {
-        Instantiate(_knockEffect, transform.position, Quaternion.identity); //  エフェクト
-        Destroy(gameObject);    //  削除
+        //  エフェクト
+        Instantiate(_knockEffect, transform.position, Quaternion.identity);
+
+        //  削除
+        Destroy(gameObject);
     }
 
 
@@ -74,6 +81,7 @@ public class TrackingEnemyController : MonoBehaviour, IEnemyDamageable
     /// </summary>
     private void Move()
     {
+        //  画面内にオブジェクトがあるかどうか
         if (_sr.isVisible)
         {
             //  追従移動
@@ -82,13 +90,14 @@ public class TrackingEnemyController : MonoBehaviour, IEnemyDamageable
                 _agent.SetDestination(PlayerController.Instance.transform.position);
             }
             //  プレイヤー方向へ回転
-            var playerPos = PlayerController.Instance.transform.position;
-            var dir = Vector3.Lerp(playerPos, transform.position, LOOK);
-            var diff = (playerPos - dir).normalized;
+            var playerPos = PlayerController.Instance.transform.position;   //  プレイヤー位置取得
+            var dir = Vector3.Lerp(playerPos, transform.position, LOOK);    //  方向決定
+            var diff = (playerPos - dir).normalized;    //  ノーマライズ処理
             transform.rotation = Quaternion.FromToRotation(Vector3.up, diff);
         }
         else
         {
+            //  停止
             _rb.Sleep();
         }
     }

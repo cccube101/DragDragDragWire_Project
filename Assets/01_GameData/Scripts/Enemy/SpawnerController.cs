@@ -23,7 +23,10 @@ public class SpawnerController : MonoBehaviour
     // ---------------------------- UnityMessage
     private async void Start()
     {
+        //  キャッシュ
         _sr = GetComponent<SpriteRenderer>();
+
+        //  生成開始
         await Helper.Tasks.Canceled(EnemyGeneration(destroyCancellationToken));
     }
 
@@ -35,8 +38,8 @@ public class SpawnerController : MonoBehaviour
     /// <summary>
     /// 生成制御
     /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>タスク処理</returns>
     private async UniTask EnemyGeneration(CancellationToken ct)
     {
         while (true)
@@ -46,6 +49,7 @@ public class SpawnerController : MonoBehaviour
             await Helper.Tasks.DelayTime(time, ct);
 
             //  生成判定
+            //  スイッチ オン ＆＆ 画面内にオブジェクトがあるかどうか
             if (_generate == Helper.Switch.OFF && !_sr.isVisible)
             {
                 continue;
@@ -56,6 +60,7 @@ public class SpawnerController : MonoBehaviour
             _totalCount.Add(enemy);
 
             //  生成数制限
+            //  最大数を超えたとき順次削除
             if (_totalCount.Count > _spawnLimit)
             {
                 _totalCount[0]?.GetComponent<IEnemyDamageable>().Die();

@@ -57,11 +57,12 @@ public class ButtonAnimation : MonoBehaviour
             .OnStateEnterAsObservable()
             .Subscribe(state =>
             {
+                //  アクション数分処理
                 foreach (var item in _actions)
                 {
                     if (state.StateInfo.IsName(item.Key))   //  ステート名で判定
                     {
-                        _actions[item.Key]?.Invoke();
+                        _actions[item.Key]?.Invoke();    //  実行
                     }
                 }
             })
@@ -132,10 +133,10 @@ public class ButtonAnimation : MonoBehaviour
     /// <summary>
     /// アニメーション更新
     /// </summary>
-    /// <param name="textColor"></param>
-    /// <param name="textPos"></param>
-    /// <param name="clip"></param>
-    /// <param name="image"></param>
+    /// <param name="textColor">テキスト色</param>
+    /// <param name="textPos">テキスト位置</param>
+    /// <param name="clip">効果音</param>
+    /// <param name="image">変更イメージ</param>
     private void UpdateAnimation
         (Color textColor
         , Vector3 textPos

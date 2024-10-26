@@ -22,6 +22,7 @@ public class QuitButtonObserver : MonoBehaviour
         _quitYesButton.OnClickAsObservable()
             .SubscribeAwait(async (_, ct) =>
             {
+                //  ƒQ[ƒ€I—¹
                 await Tasks.ApplicationQuit(_baseCanvas, destroyCancellationToken);
 
             }, AwaitOperation.Drop)
@@ -30,25 +31,11 @@ public class QuitButtonObserver : MonoBehaviour
         _quitNoButton.OnClickAsObservable()
             .SubscribeAwait(async (_, ct) =>
             {
+                //  I—¹‰æ–Ê‚ğ•Â‚¶‚é
                 var value = _manager.QuitFadeValue;
                 await _manager.FadeQuitCanvas(false, value.y, value.x, ct);
 
             }, AwaitOperation.Drop)
             .RegisterTo(destroyCancellationToken);
     }
-
-
-
-    // ---------------------------- PublicMethod
-
-
-
-
-
-    // ---------------------------- PrivateMethod
-
-
-
-
-
 }

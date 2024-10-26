@@ -52,22 +52,29 @@ namespace Helper
         /// <summary>
         /// 初期化
         /// </summary>
-        /// <param name="mixer"></param>
+        /// <param name="mixer">設定用音量ミキサー</param>
         public static void Init(AudioMixer mixer)
         {
+            //  スコア初期化
             ScoreInit();
 
+            //  オーディオ生成
             Audio.CreateParam();
 
+            //  生成済みかどうか
             if (!GetBool(IS_ONETIME_INIT))
             {
+                //  パラメータ初期化
                 Audio.InitParam(mixer);
 
+                //  データ保存
                 Audio.SaveVolume();
 
+                //  生成状態保存
                 SetBool(IS_ONETIME_INIT, true);
             }
 
+            //  読み込み
             Audio.LoadVolume();
         }
 
@@ -77,53 +84,67 @@ namespace Helper
         /// </summary>
         public static void ScoreInit()
         {
+            //  シーン数分処理
             foreach (var name in Enum.GetNames(typeof(SceneName)))
             {
+                //  初期化シーン ＆＆ タイトルシーン スキップ
                 if (name != "BaseInit" && name != "Title")
                 {
+                    //  パラメータ取得
                     var coin = PlayerPrefs.GetInt(name + COIN, 0);
                     var hp = PlayerPrefs.GetInt(name + HP, 0);
                     var time = PlayerPrefs.GetFloat(name + TIME, 0);
                     var score = PlayerPrefs.GetFloat(name + SCORE, 0);
 
+                    //  シーンごとに合わせリストに保存
                     _scoreList.Add(name, new ScoreData(coin, hp, time, score));
 
+                    //  トップタイム取得
                     var topTime = PlayerPrefs.GetFloat(name + TOPTIME, LIMIT_TIME);
 
+                    //  シーンごとに合わせリストに保存
                     _topTimeList.Add(name, topTime);
                 }
             }
 
+            //  トータルスコア計算
             TotalScoreCalculation();
         }
 
         /// <summary>
         /// スコア保存
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="coin"></param>
-        /// <param name="hp"></param>
-        /// <param name="time"></param>
-        /// <param name="score"></param>
+        /// <param name="name">シーン名</param>
+        /// <param name="coin">コイン数</param>
+        /// <param name="hp">残HP数</param>
+        /// <param name="time">クリアタイム</param>
+        /// <param name="score">ステージスコア</param>
         public static void SaveScore(string name, int coin, int hp, float time, float score)
         {
+            //  ベストスコア更新
             if (score >= _scoreList[name].Score)
             {
+                //  パラメータ保存
                 PlayerPrefs.SetInt(name + COIN, coin);
                 PlayerPrefs.SetInt(name + HP, hp);
                 PlayerPrefs.SetFloat(name + TIME, time);
                 PlayerPrefs.SetFloat(name + SCORE, score);
 
+                //  リストへ更新
                 _scoreList[name] = new ScoreData(coin, hp, time, score);
             }
 
+            //  トップタイム更新
             if (time < _topTimeList[name])
             {
+                //  保存
                 PlayerPrefs.SetFloat(name + TOPTIME, time);
 
+                //  リストへ更新
                 _topTimeList[name] = time;
             }
 
+            //  トータルスコア計算
             TotalScoreCalculation();
         }
 
@@ -132,28 +153,32 @@ namespace Helper
         /// </summary>
         private static void TotalScoreCalculation()
         {
+            //  合計算出
             float totalScore = 0;
             foreach (var item in ScoreList)
             {
                 totalScore += item.Value.Score;
             }
-            TotalScore = totalScore;
+            TotalScore = totalScore;    //  更新
 
+            //  平均算出
             float averageTime = 0;
             foreach (var item in TopTimeList)
             {
                 averageTime += item.Value;
             }
-            AverageTime = averageTime / TopTimeList.Count;
+            AverageTime = averageTime / TopTimeList.Count;  //  更新
 
-            UnityroomApiClient.Instance.SendScore(1, Data.TotalScore, ScoreboardWriteMode.Always);
-            UnityroomApiClient.Instance.SendScore(2, Data.AverageTime, ScoreboardWriteMode.Always);
+            //  UnityRoomランキング更新
+            UnityroomApiClient.Instance.SendScore(1, TotalScore, ScoreboardWriteMode.Always);
+            UnityroomApiClient.Instance.SendScore(2, AverageTime, ScoreboardWriteMode.Always);
         }
 
         /// <summary>
-        /// boolデータ保存
+        /// boolデータ取得
+        /// int型のデータを bool型に変換して取得
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="key">保存先名</param>
         /// <returns></returns>
         private static bool GetBool(string key)
         {
@@ -161,10 +186,11 @@ namespace Helper
         }
 
         /// <summary>
-        /// boolデータ取得
+        /// boolデータ保存
+        /// bool型のデータを int型に変換して保存
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="key">保存先名</param>
+        /// <param name="value">保存データ</param>
         private static void SetBool(string key, bool value)
         {
             PlayerPrefs.SetInt(key, value ? 1 : 0);

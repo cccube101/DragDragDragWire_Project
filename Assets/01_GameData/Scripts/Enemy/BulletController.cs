@@ -33,11 +33,13 @@ public class BulletController : MonoBehaviour, IEnemyDamageable
     // ---------------------------- UnityMessage
     private void Start()
     {
+        //  射撃音再生
         Instantiate(_shootClip, transform.position, Quaternion.identity);
     }
 
     private void Update()
     {
+        //  移動処理
         transform.position += _addDir * _moveSpeed * Time.deltaTime;
     }
 
@@ -61,10 +63,13 @@ public class BulletController : MonoBehaviour, IEnemyDamageable
     /// <summary>
     /// プレイヤーへのダメージ
     /// </summary>
-    public int Damage(GameObject obj)
+    /// <param name="player">プレイヤーオブジェクト</param>
+    /// <returns>ダメージ量</returns>
+    public int Damage(GameObject player)
     {
-        var dir = (obj.transform.position - transform.position).normalized;
-        obj.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
+        //  プレイヤーへのノックバック処理
+        var dir = (player.transform.position - transform.position).normalized;
+        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
 
         return _damage;
     }
@@ -74,7 +79,7 @@ public class BulletController : MonoBehaviour, IEnemyDamageable
     /// </summary>
     public void Die()
     {
-        //  エフェクト
+        //  エフェクト生成
         Instantiate(_hitClip, transform.position, Quaternion.identity);
         Instantiate(_knockEffect, transform.position, Quaternion.identity);
 

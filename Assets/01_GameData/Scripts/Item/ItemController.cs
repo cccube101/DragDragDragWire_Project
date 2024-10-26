@@ -25,6 +25,7 @@ public class ItemController : MonoBehaviour
 
     private void Start()
     {
+        //  アニメーション開始
         Animation();
     }
 
@@ -49,16 +50,19 @@ public class ItemController : MonoBehaviour
     /// </summary>
     private void Animation()
     {
+        //  上下に移動
         transform.DOMove(transform.position + _afterPos, _duration)
             .SetEase(Ease.OutSine)
             .SetLoops(-1, LoopType.Yoyo)
             .SetLink(gameObject);
 
+        //  大きさを変更
         transform.DOScale(_afterTransform, _duration)
             .SetEase(Ease.Linear)
             .SetLoops(-1, LoopType.Yoyo)
             .SetLink(gameObject);
 
+        //  Y軸方向に回転
         _circle.DORotate(new Vector3(0, 360, 0), _turnDuration, RotateMode.FastBeyond360)
             .SetEase(Ease.Linear)
             .SetLoops(-1, LoopType.Incremental)

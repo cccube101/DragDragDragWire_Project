@@ -18,19 +18,22 @@ public class FloorChanger : MonoBehaviour
     [SerializeField] private UnityEvent _alertClip;
 
     // ---------------------------- Field
-    private Dictionary<GameObject, Tilemap> _floors = new();
+    private readonly Dictionary<GameObject, Tilemap> _floors = new();
 
 
     // ---------------------------- UnityMessage
     private async void Start()
     {
+        //  オブジェクトに紐づいたタイルマップのキャッシュ
         foreach (var obj in _floorsObjects)
         {
             _floors.Add(obj, obj.GetComponent<Tilemap>());
             obj.SetActive(false);
         }
+        //  リストの初めの部分のみアクティブ化
         _floorsObjects[0].SetActive(true);
 
+        //  フロア切換え開始
         await Helper.Tasks.Canceled(StartEvent(destroyCancellationToken));
     }
 
@@ -38,16 +41,18 @@ public class FloorChanger : MonoBehaviour
     /// <summary>
     /// 開始
     /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="ct">キャンセルトークン</param>
+    /// <returns>開始処理</returns>
     private async UniTask StartEvent(CancellationToken ct)
     {
         while (true)
         {
+            //  順次フロアの切換え
             foreach (var floor in _floors)
             {
                 floor.Key.SetActive(true);
 
+                //  見えるようにスプライトの色を戻す
                 await DOVirtual.Color(_endColor, _toColor, _duration, (color) =>
                 {
                     floor.Value.color = color;
@@ -56,9 +61,10 @@ public class FloorChanger : MonoBehaviour
                 .SetLink(floor.Key)
                 .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
 
-
+                //  切換えまで待機
                 await Helper.Tasks.DelayTime(_waitTime, ct);
 
+                //  切換え処理
                 var tasks = new List<UniTask>()
                 {
                     Fade(),
@@ -66,6 +72,7 @@ public class FloorChanger : MonoBehaviour
                 };
                 async UniTask Fade()
                 {
+                    //  指定回数アラートに合わせ色をフェード
                     await DOVirtual.Color(_toColor, _endColor, _duration, (color) =>
                         {
                             floor.Value.color = color;
@@ -77,6 +84,7 @@ public class FloorChanger : MonoBehaviour
                 }
                 async UniTask PlayClip()
                 {
+                    //  指定回数アラートを再生
                     for (var i = 0; i < _loopTime / 2 + 1; i++)
                     {
                         _alertClip?.Invoke();
@@ -85,7 +93,9 @@ public class FloorChanger : MonoBehaviour
                 }
                 await UniTask.WhenAll(tasks);
 
+                //  消失時プレイヤーのフック判定をキャンセル
                 PlayerController.Instance.ShotPhase = UnityEngine.InputSystem.InputActionPhase.Canceled;
+                //  フロアを非アクティブ化
                 floor.Key.SetActive(false);
             }
 

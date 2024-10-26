@@ -17,13 +17,10 @@ public class MoveFloorController : MonoBehaviour
 
 
 
-
-
-
-
     // ---------------------------- UnityMessage
     private void Start()
     {
+        //  タスク開始
         Tasks(destroyCancellationToken).Forget();
     }
 
@@ -40,15 +37,13 @@ public class MoveFloorController : MonoBehaviour
         await Helper.Tasks.DelayTime(_waitTime, ct);
 
         //  移動処理
-        await transform.DOPath
-                (positions
-                , _time
-                , _pathType
-                , PathMode.Sidescroller2D)
-                .SetEase(Ease.Linear)
-                .SetLoops(-1, _loopType)
-                .SetOptions(_setOption)
-                .SetLink(gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+        //  パスを通り繰り返し移動していく
+        //  PathType変更で経路が変更される
+        await transform.DOPath(positions, _time, _pathType, PathMode.Sidescroller2D)
+            .SetEase(Ease.Linear)
+            .SetLoops(-1, _loopType)
+            .SetOptions(_setOption)
+            .SetLink(gameObject)
+            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
     }
 }

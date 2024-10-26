@@ -18,11 +18,14 @@ public class StuckEnemyController : MonoBehaviour, IEnemyDamageable
     // ---------------------------- UnityMessage
     private void Start()
     {
+        //  キャッシュ
         _sr = GetComponent<SpriteRenderer>();
     }
 
     private void Update()
     {
+        //  方向転換
+        //  画面内にオブジェクトがある際に処理
         if (_sr.isVisible)
         {
             transform.eulerAngles += new Vector3(0, 0, _turnSpeed * Time.deltaTime);
@@ -36,14 +39,16 @@ public class StuckEnemyController : MonoBehaviour, IEnemyDamageable
     /// <summary>
     /// プレイヤーへのダメージ
     /// </summary>
-    public int Damage(GameObject obj)
+    /// <param name="player">プレイヤーオブジェクト</param>
+    /// <returns>ダメージ量</returns>
+    public int Damage(GameObject player)
     {
         //  エフェクト
         Instantiate(_knockEffect, transform.position, Quaternion.identity);
 
         //  ノックバック
-        var dir = (obj.transform.position - transform.position).normalized;
-        obj.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
+        var dir = (player.transform.position - transform.position).normalized;
+        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
 
         //  ダメージ
         return _damage;

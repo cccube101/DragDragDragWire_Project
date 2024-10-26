@@ -54,11 +54,12 @@ public class SliderAnimation : MonoBehaviour
             .OnStateEnterAsObservable()
             .Subscribe(state =>
             {
+                //  アクション数分処理
                 foreach (var item in _actions)
                 {
                     if (state.StateInfo.IsName(item.Key))   //  ステート名で判定
                     {
-                        _actions[item.Key].Invoke();
+                        _actions[item.Key].Invoke();    //  実行
                     }
                 }
             })
@@ -117,8 +118,8 @@ public class SliderAnimation : MonoBehaviour
     /// <summary>
     /// アニメーション更新
     /// </summary>
-    /// <param name="content"></param>
-    /// <param name="frame"></param>
+    /// <param name="content">背景色</param>
+    /// <param name="frame">フレーム色</param>
     private void UpdateAnimation(Color content, Color frame)
     {
         ChangeColor(_fillImg, content);
@@ -130,8 +131,8 @@ public class SliderAnimation : MonoBehaviour
     /// <summary>
     /// 色変更
     /// </summary>
-    /// <param name="img"></param>
-    /// <param name="toColor"></param>
+    /// <param name="img">変更先</param>
+    /// <param name="toColor">変更色</param>
     private void ChangeColor(Image img, Color toColor)
     {
         DOVirtual.Color
