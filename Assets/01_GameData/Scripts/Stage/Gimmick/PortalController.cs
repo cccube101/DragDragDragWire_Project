@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-public class PortalController : MonoBehaviour
+public class PortalController : GimmickBase
 {
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("パラメータ")] private Transform _warpPos;
@@ -33,66 +33,68 @@ public class PortalController : MonoBehaviour
 
     private async void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag(TagName.Player))
-        {
-            //  色変更アニメーション開始
-            FadeColor(destroyCancellationToken).Forget();
+        // ------ 非プレイヤー時早期リターン
+        if (!collision.gameObject.CompareTag(TagName.Player)) return;
 
-            async UniTask FadeColor(CancellationToken ct)
-            {
-                //  変更
-                List<UniTask> toTasks = new()
+        //  色変更アニメーション開始
+        FadeColor(destroyCancellationToken).Forget();
+
+        async UniTask FadeColor(CancellationToken ct)
+        {
+            //  変更
+            List<UniTask> toTasks = new()
                 {
                     FadeTask(_fadeValue),
                     ScaleTask(_scaleValue),
                 };
-                await UniTask.WhenAll(toTasks);
+            await UniTask.WhenAll(toTasks);
 
-                //  戻す
-                List<UniTask> endTasks = new()
+            //  戻す
+            List<UniTask> endTasks = new()
                 {
                     FadeTask(0),
                     ScaleTask(_ringScaleInit),
                 };
-                await UniTask.WhenAll(endTasks);
+            await UniTask.WhenAll(endTasks);
 
 
-                async UniTask FadeTask(float value)
-                {
-                    await _fadeRing.DOFade(value, _fadeDuration)
-                    .SetEase(Ease.OutBack)
-                    .SetUpdate(true)
-                    .SetLink(gameObject)
-                    .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
-                }
-
-                async UniTask ScaleTask(float value)
-                {
-                    await _fadeRing.transform.DOScale(value, _fadeDuration)
-                    .SetEase(Ease.OutBack)
-                    .SetUpdate(true)
-                    .SetLink(gameObject)
-                    .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
-                }
+            async UniTask FadeTask(float value)
+            {
+                await _fadeRing.DOFade(value, _fadeDuration)
+                .SetEase(Ease.OutBack)
+                .SetUpdate(true)
+                .SetLink(gameObject)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
             }
 
-            //  ワープ時拒否
-            if (!_isWarping)
+            async UniTask ScaleTask(float value)
             {
-                //  ワープ
-                collision.transform.position = _warpPos.position;
-
-                _isWarping = true;
-
-                //  効果音
-                _audio.PlayOneShot(_clip);
-                //  連続でワープしないように待機
-                await Helper.Tasks.Canceled(Helper.Tasks.DelayTime(_duration, destroyCancellationToken));
-
-                _isWarping = false;
+                await _fadeRing.transform.DOScale(value, _fadeDuration)
+                .SetEase(Ease.OutBack)
+                .SetUpdate(true)
+                .SetLink(gameObject)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
             }
         }
+
+
+
+        // ------ ワープ時拒否
+        if (_isWarping) return;
+
+        //  ワープ
+        collision.transform.position = _warpPos.position;
+
+        _isWarping = true;
+
+        //  効果音
+        _audio.PlayOneShot(_clip);
+        //  連続でワープしないように待機
+        await Helper.Tasks.Canceled(Helper.Tasks.DelayTime(_duration, destroyCancellationToken));
+
+        _isWarping = false;
     }
+
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Helper.Switch _gizmoSwitch;
     [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Color _color;

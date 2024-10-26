@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Tilemaps;
 
-public class FloorChanger : MonoBehaviour
+public class FloorChanger : GimmickBase
 {
     // ---------------------------- SerializeField
     [SerializeField] private GameObject[] _floorsObjects;

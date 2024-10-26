@@ -1,7 +1,7 @@
 using Alchemy.Inspector;
 using UnityEngine;
 
-public class ConveyorController : MonoBehaviour
+public class ConveyorController : GimmickBase
 {
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("ƒpƒ‰ƒ[ƒ^")] private float _addSpeed;
