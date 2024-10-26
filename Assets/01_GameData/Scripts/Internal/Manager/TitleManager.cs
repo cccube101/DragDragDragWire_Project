@@ -74,9 +74,6 @@ public class TitleManager : MonoBehaviour
     [SerializeField, Required, BoxGroup("èIóπ")] private Vector2 _quitFadeValue;
     [SerializeField, Required, BoxGroup("èIóπ")] private float _quitFadeDuration;
 
-
-
-
     [SerializeField] private FancyScrollView.Scroller _scroller;
 
     // ---------------------------- Field
