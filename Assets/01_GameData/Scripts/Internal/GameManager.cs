@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField, Required, BoxGroup("フェードSE")] private UnityEvent _fadeClip;
 
+    [SerializeField, Required, BoxGroup("ベース")] private CanvasGroup _baseCanvas;
+
     [SerializeField, Required, BoxGroup("ボタン/オプション")] private Button _btn_optionBack;
     [SerializeField, Required, BoxGroup("ボタン/オプション")] private Button _btn_optionRetry;
     [SerializeField, Required, BoxGroup("ボタン/オプション")] private Button _btn_optionTitle;
@@ -55,7 +57,6 @@ public class GameManager : MonoBehaviour
     // ---------------------------- UnityMessage
     private void Awake()
     {
-        Application.targetFrameRate = 60;
 
         _instance = this;
 
@@ -68,6 +69,9 @@ public class GameManager : MonoBehaviour
 
         //  DOTween初期設定
         DG.Tweening.DOTween.SetTweensCapacity(tweenersCapacity: 20000, sequencesCapacity: 200);
+
+        //  フレームレート固定
+        Application.targetFrameRate = 60;
 
         //  初期化
         _state.Value = GameState.PAUSE;
@@ -164,14 +168,14 @@ public class GameManager : MonoBehaviour
         .SubscribeAwait(async (_, ct) =>
         {
 
-            await Tasks.SceneChange(current, ct);
+            await Tasks.SceneChange(current, _baseCanvas, ct);
         })
         .AddTo(this);
 
         _btn_optionTitle.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-            await Tasks.SceneChange((int)SceneName.Title, ct);
+            await Tasks.SceneChange((int)SceneName.Title, _baseCanvas, ct);
         })
         .AddTo(this);
 
@@ -180,21 +184,21 @@ public class GameManager : MonoBehaviour
         _btn_clearRetry.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-            await Tasks.SceneChange(current, ct);
+            await Tasks.SceneChange(current, _baseCanvas, ct);
         })
         .AddTo(this);
 
         _btn_clearTitle.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-            await Tasks.SceneChange((int)SceneName.Title, ct);
+            await Tasks.SceneChange((int)SceneName.Title, _baseCanvas, ct);
         })
         .AddTo(this);
 
         _btn_clearNext.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-            await Tasks.SceneChange(current + 1, ct);
+            await Tasks.SceneChange(current + 1, _baseCanvas, ct);
         })
         .AddTo(this);
 
@@ -203,14 +207,14 @@ public class GameManager : MonoBehaviour
         _btn_overRetry.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-            await Tasks.SceneChange(current, ct);
+            await Tasks.SceneChange(current, _baseCanvas, ct);
         })
         .AddTo(this);
 
         _btn_overTitle.OnClickAsObservable()
         .SubscribeAwait(async (_, ct) =>
         {
-            await Tasks.SceneChange((int)SceneName.Title, ct);
+            await Tasks.SceneChange((int)SceneName.Title, _baseCanvas, ct);
         })
         .AddTo(this);
     }

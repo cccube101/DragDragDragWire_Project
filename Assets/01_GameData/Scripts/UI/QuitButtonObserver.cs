@@ -8,6 +8,7 @@ public class QuitButtonObserver : MonoBehaviour
 {
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("マネージャー")] private TitleManager _manager;
+    [SerializeField, Required, BoxGroup("マネージャー")] private CanvasGroup _baseCanvas;
     [SerializeField, Required, BoxGroup("ボタン")] private Button _quitYesButton;
     [SerializeField, Required, BoxGroup("ボタン")] private Button _quitNoButton;
 
@@ -21,7 +22,7 @@ public class QuitButtonObserver : MonoBehaviour
         _quitYesButton.OnClickAsObservable()
             .SubscribeAwait(async (_, ct) =>
             {
-                await Tasks.ApplicationQuit(destroyCancellationToken);
+                await Tasks.ApplicationQuit(_baseCanvas, destroyCancellationToken);
 
             }, AwaitOperation.Drop)
             .RegisterTo(destroyCancellationToken);
