@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using UnityEngine;
 
-public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
+public class ShooterEnemyController : EnemyBase
 {
     // ---------------------------- SerializeField
     [SerializeField, Required, BoxGroup("オブジェクト")] private GameObject _muzzle;
@@ -13,16 +13,7 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
     [SerializeField, Required, BoxGroup("弾パラメータ")] private float _generationRate;
     [SerializeField, Required, BoxGroup("弾パラメータ")] private float _generationInterval;
 
-    [SerializeField, Required, BoxGroup("ダメージ")] private int _damage;
-    [SerializeField, Required, BoxGroup("ダメージ")] private float _knockBackForce;
-
-    [SerializeField, Required, BoxGroup("エフェクト")] private GameObject _knockEffect;
-
     // ---------------------------- Field
-    //  初期化
-    private SpriteRenderer _sr = null;
-    private Rigidbody2D _rb = null;
-
     //  追従
     private readonly float LOOK = 0.8f;
 
@@ -30,11 +21,9 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
 
 
     // ---------------------------- UnityMessage
-    private async void Start()
+    public override async void Start()
     {
-        //  キャッシュ
-        _sr = GetComponent<SpriteRenderer>();
-        _rb = GetComponent<Rigidbody2D>();
+        StartEvent();
 
         //  射撃サイクル開始
         await Helper.Tasks.Canceled(ShooterCycle(destroyCancellationToken));
@@ -45,32 +34,6 @@ public class ShooterEnemyController : MonoBehaviour, IEnemyDamageable
         //  移動処理
         Move();
     }
-
-
-
-
-    // ---------------------------- PublicMethod
-    /// <summary>
-    /// プレイヤーへのダメージ
-    /// </summary>
-    /// <param name="player">プレイヤーオブジェクト</param>
-    /// <returns>ダメージ量</returns>
-    public int Damage(GameObject player)
-    {
-        var dir = (player.transform.position - transform.position).normalized;
-        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
-        return _damage;
-    }
-
-    /// <summary>
-    /// 敵消滅
-    /// </summary>
-    public void Die()
-    {
-        Instantiate(_knockEffect, transform.position, Quaternion.identity);
-        Destroy(gameObject);
-    }
-
 
 
 

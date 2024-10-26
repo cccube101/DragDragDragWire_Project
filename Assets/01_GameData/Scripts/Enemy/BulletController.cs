@@ -1,15 +1,11 @@
 using Alchemy.Inspector;
 using UnityEngine;
 
-public class BulletController : MonoBehaviour, IEnemyDamageable
+public class BulletController : EnemyBase
 {
     // ---------------------------- SerializeField
 
-    [SerializeField, Required, BoxGroup("基礎")] private float _moveSpeed;
-    [SerializeField, Required, BoxGroup("基礎")] private int _damage;
-    [SerializeField, Required, BoxGroup("基礎")] private float _knockBackForce;
-
-    [SerializeField, Required, BoxGroup("エフェクト")] private GameObject _knockEffect;
+    [SerializeField, Required, BoxGroup("パラメータ")] private float _moveSpeed;
     [SerializeField, Required, BoxGroup("エフェクト")] private GameObject _shootClip;
     [SerializeField, Required, BoxGroup("エフェクト")] private GameObject _hitClip;
 
@@ -31,8 +27,10 @@ public class BulletController : MonoBehaviour, IEnemyDamageable
 
 
     // ---------------------------- UnityMessage
-    private void Start()
+    public override void Start()
     {
+        StartEvent();
+
         //  射撃音再生
         Instantiate(_shootClip, transform.position, Quaternion.identity);
     }
@@ -61,23 +59,9 @@ public class BulletController : MonoBehaviour, IEnemyDamageable
 
     // ---------------------------- PublicMethod
     /// <summary>
-    /// プレイヤーへのダメージ
-    /// </summary>
-    /// <param name="player">プレイヤーオブジェクト</param>
-    /// <returns>ダメージ量</returns>
-    public int Damage(GameObject player)
-    {
-        //  プレイヤーへのノックバック処理
-        var dir = (player.transform.position - transform.position).normalized;
-        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
-
-        return _damage;
-    }
-
-    /// <summary>
     /// 敵消滅
     /// </summary>
-    public void Die()
+    public override void Die()
     {
         //  エフェクト生成
         Instantiate(_hitClip, transform.position, Quaternion.identity);
