@@ -1,6 +1,7 @@
 using Alchemy.Inspector;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Helper;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -63,8 +64,8 @@ public class PortalController : GimmickBase
                 await _fadeRing.DOFade(value, _fadeDuration)
                 .SetEase(Ease.OutBack)
                 .SetUpdate(true)
-                .SetLink(gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .SetLink(_fadeRing.gameObject)
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
 
             async UniTask ScaleTask(float value)
@@ -72,8 +73,8 @@ public class PortalController : GimmickBase
                 await _fadeRing.transform.DOScale(value, _fadeDuration)
                 .SetEase(Ease.OutBack)
                 .SetUpdate(true)
-                .SetLink(gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .SetLink(_fadeRing.gameObject)
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
         }
 
@@ -90,23 +91,23 @@ public class PortalController : GimmickBase
         //  効果音
         _audio.PlayOneShot(_clip);
         //  連続でワープしないように待機
-        await Helper.Tasks.Canceled(Helper.Tasks.DelayTime(_duration, destroyCancellationToken));
+        await Tasks.Canceled(Tasks.DelayTime(_duration, destroyCancellationToken));
 
         _isWarping = false;
     }
 
     // ---------------------------- SerializeField
-    [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Helper.Switch _gizmoSwitch;
+    [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Switch _gizmoSwitch;
     [SerializeField, Required, BoxGroup("ギズモパラメータ")] private Color _color;
 
 #if UNITY_EDITOR
     // ---------------------------- UnityMessage
     void OnDrawGizmos()
     {
-        if (_gizmoSwitch == Helper.Switch.ON)
+        if (_gizmoSwitch == Switch.ON)
         {
             Gizmos.color = _color;
-            Gizmos.DrawWireSphere(transform.position, transform.localScale.y);
+            Gizmos.DrawWireSphere(_tr.position, _tr.localScale.y);
         }
     }
 
