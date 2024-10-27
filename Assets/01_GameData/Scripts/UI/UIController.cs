@@ -202,7 +202,6 @@ public class UIController : MonoBehaviour
             //  アラート回数算出
             var loopTime = (int)(_alertTime / _alertDuration);
 
-            var tcb = TweenCancelBehaviour.KillAndCancelAwait;  // UniTaskへの変換時に必要な設定
             var tasks = new List<UniTask>()
             {
                 FadePanel(),
@@ -218,7 +217,7 @@ public class UIController : MonoBehaviour
                     .SetUpdate(true)
                     .SetLink(_alertPanel.gameObject)
                     .SetLoops(loopTime, LoopType.Yoyo)
-                    .ToUniTask(tcb, cancellationToken: ct);
+                    .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
             //  テキスト点滅
             async UniTask TextColor()
@@ -232,7 +231,7 @@ public class UIController : MonoBehaviour
                     .SetUpdate(true)
                     .SetLink(_timeText.gameObject)
                     .SetLoops(loopTime, LoopType.Yoyo)
-                    .ToUniTask(tcb, cancellationToken: ct);
+                    .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
             //  テキストサイズ
             async UniTask TextScale()
@@ -242,7 +241,7 @@ public class UIController : MonoBehaviour
                     .SetUpdate(true)
                     .SetLink(_timeText.gameObject)
                     .SetLoops(loopTime, LoopType.Yoyo)
-                    .ToUniTask(tcb, cancellationToken: ct);
+                    .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
             //  オーディオ再生
             async UniTask PlayClip()
@@ -387,7 +386,7 @@ public class UIController : MonoBehaviour
                                      .SetEase(Ease.Linear)
                                      .SetUpdate(true)
                                      .SetLink(img.gameObject)
-                                     .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                                     .ToUniTask(Tasks.TCB, cancellationToken: ct);
                             }
 
                             //  スケール変更
@@ -423,7 +422,7 @@ public class UIController : MonoBehaviour
                         .SetUpdate(true)
                         .SetLoops(-1, LoopType.Yoyo)
                         .SetLink(obj)
-                        .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                        .ToUniTask(Tasks.TCB, cancellationToken: ct);
                 }
                 async UniTask ScaleChange(GameObject obj)
                 {
@@ -432,7 +431,7 @@ public class UIController : MonoBehaviour
                         .SetUpdate(true)
                         .SetLoops(-1, LoopType.Yoyo)
                         .SetLink(obj)
-                        .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                        .ToUniTask(Tasks.TCB, cancellationToken: ct);
                 }
             }
 
@@ -518,7 +517,7 @@ public class UIController : MonoBehaviour
                 .SetEase(Ease.Linear)
                 .SetUpdate(true)
                 .SetLink(_stageNameText.gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
         }
         _stageNameText.gameObject.SetActive(false);
     }
@@ -644,7 +643,7 @@ public class UIController : MonoBehaviour
                 .SetEase(Ease.Linear)
                 .SetUpdate(true)
                 .SetLink(logo.Obj)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct),
+                .ToUniTask(Tasks.TCB, cancellationToken: ct),
         };
 
         await UniTask.WhenAll(logoTasks);
@@ -679,7 +678,7 @@ public class UIController : MonoBehaviour
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetUpdate(true)
                 .SetLink(logo.Obj)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
         }
 
         //  ------  スコア表示
@@ -747,7 +746,7 @@ public class UIController : MonoBehaviour
                     .SetEase(Ease.OutBack)
                     .SetLink(text.gameObject)
                     .SetUpdate(true)
-                    .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                    .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
         }
 
@@ -788,7 +787,7 @@ public class UIController : MonoBehaviour
             .SetEase(ease)
             .SetUpdate(true)
             .SetLink(rect.gameObject)
-            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+            .ToUniTask(Tasks.TCB, cancellationToken: ct);
     }
 
     /// <summary>
@@ -811,7 +810,7 @@ public class UIController : MonoBehaviour
             .SetEase(ease)
             .SetUpdate(true)
             .SetLink(rect.gameObject)
-            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+            .ToUniTask(Tasks.TCB, cancellationToken: ct);
     }
 
     /// <summary>
@@ -837,7 +836,7 @@ public class UIController : MonoBehaviour
             .SetEase(Ease.Linear)
             .SetUpdate(true)
             .SetLink(source.gameObject)
-            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+            .ToUniTask(Tasks.TCB, cancellationToken: ct);
     }
 
     /// <summary>
@@ -860,7 +859,7 @@ public class UIController : MonoBehaviour
                 .SetEase(ease)
                 .SetUpdate(true)
                 .SetLink(rect.gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
     }
 
     /// <summary>
@@ -883,7 +882,7 @@ public class UIController : MonoBehaviour
             .SetEase(ease)
             .SetUpdate(true)
             .SetLink(img.gameObject)
-            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+            .ToUniTask(Tasks.TCB, cancellationToken: ct);
     }
 
     #endregion
