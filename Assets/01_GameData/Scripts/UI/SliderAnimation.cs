@@ -3,21 +3,16 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 using DG.Tweening;
-using System.Collections.Generic;
-using R3;
-using R3.Triggers;
 using Alchemy.Inspector;
 
-public class SliderAnimation : MonoBehaviour
+public class SliderAnimation : UIAnimatorBase, IUIAnimation
 {
     // ---------------------------- SerializeField
-    [SerializeField, Required, BoxGroup("基礎パラメータ")] private UnityEvent[] _event;
-
-    [SerializeField, Required, BoxGroup("基礎パラメータ")] private Image _fillFrameImg;
-    [SerializeField, Required, BoxGroup("基礎パラメータ")] private Image _fillImg;
-    [SerializeField, Required, BoxGroup("基礎パラメータ")] private Image _handleFrameImg;
-    [SerializeField, Required, BoxGroup("基礎パラメータ")] private Image _handleImg;
-    [SerializeField, Required, BoxGroup("基礎パラメータ")] private float _animeDuration;
+    [SerializeField, Required, BoxGroup("パラメータ")] private Image _fillFrameImg;
+    [SerializeField, Required, BoxGroup("パラメータ")] private Image _fillImg;
+    [SerializeField, Required, BoxGroup("パラメータ")] private Image _handleFrameImg;
+    [SerializeField, Required, BoxGroup("パラメータ")] private Image _handleImg;
+    [SerializeField, Required, BoxGroup("パラメータ")] private float _animeDuration;
 
     [SerializeField, Required, BoxGroup("ノーマル")] private Color _normalColor;
     [SerializeField, Required, BoxGroup("ノーマル")] private Color _normalFrameColor;
@@ -28,43 +23,12 @@ public class SliderAnimation : MonoBehaviour
 
 
     // ---------------------------- Field
-    //  実行メソッド
-    private Dictionary<string, UnityEvent> _actions;
+
+
 
     // ---------------------------- UnityMessage
-    private void Start()
-    {
-        //  レイヤー名取得
-        var layer = GetComponent<Animator>().GetLayerName(0);
-        var clips = GetComponent<Animator>().runtimeAnimatorController.animationClips;
 
-        //  メソッド格納
-        _actions = new Dictionary<string, UnityEvent>(clips.Length);
-        for (int i = 0; i < clips.Length; i++)
-        {
-            //  "レイヤー.ステート名"
-            _actions.Add($"{layer}.{clips[i].name}", _event[i]);
-        }
-    }
 
-    private void OnEnable()
-    {
-        //  アニメーターステート監視
-        GetComponent<Animator>().GetBehaviour<ObservableStateMachineTrigger>()
-            .OnStateEnterAsObservable()
-            .Subscribe(state =>
-            {
-                //  アクション数分処理
-                foreach (var item in _actions)
-                {
-                    if (state.StateInfo.IsName(item.Key))   //  ステート名で判定
-                    {
-                        _actions[item.Key].Invoke();    //  実行
-                    }
-                }
-            })
-            .AddTo(this);
-    }
 
     // ---------------------------- PublicMethod
     #region ------ StateAnimation
