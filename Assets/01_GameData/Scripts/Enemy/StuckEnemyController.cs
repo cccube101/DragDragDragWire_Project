@@ -13,7 +13,7 @@ public class StuckEnemyController : EnemyBase
         //  画面内にオブジェクトがある際に処理
         if (_sr.isVisible)
         {
-            transform.eulerAngles += new Vector3(0, 0, _turnSpeed * Time.deltaTime);
+            _tr.eulerAngles += new Vector3(0, 0, _turnSpeed * Time.deltaTime);
         }
     }
 
@@ -24,16 +24,14 @@ public class StuckEnemyController : EnemyBase
     /// <summary>
     /// プレイヤーへのダメージ
     /// </summary>
-    /// <param name="player">プレイヤーオブジェクト</param>
     /// <returns>ダメージ量</returns>
-    public override int Damage(GameObject player)
+    public override int Damage()
     {
         //  エフェクト
-        Instantiate(_knockEffect, transform.position, Quaternion.identity);
+        Instantiate(_knockEffect, _tr.position, Quaternion.identity);
 
         //  ノックバック
-        var dir = (player.transform.position - transform.position).normalized;
-        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
+        KnockBackPlayer();
 
         return _damage;
     }

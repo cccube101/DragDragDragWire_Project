@@ -2,6 +2,6 @@ using UnityEngine;
 
 public interface IEnemyDamageable
 {
-    int Damage(GameObject obj);
+    int Damage();
     void Die();
 }

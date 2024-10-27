@@ -14,6 +14,7 @@ public class SpawnerController : MonoBehaviour
     [SerializeField, Required, BoxGroup("パラメータ/敵オブジェクト")] private GameObject _enemy;
 
     // ---------------------------- Field
+    private Transform _tr = null;
     private SpriteRenderer _sr = null;
     private readonly List<GameObject> _totalCount = new();
 
@@ -24,6 +25,7 @@ public class SpawnerController : MonoBehaviour
     private async void Start()
     {
         //  キャッシュ
+        _tr = transform;
         _sr = GetComponent<SpriteRenderer>();
 
         //  生成開始
@@ -56,7 +58,7 @@ public class SpawnerController : MonoBehaviour
             }
 
             //  生成
-            var enemy = Instantiate(_enemy, transform.position, Quaternion.identity);
+            var enemy = Instantiate(_enemy, _tr.position, Quaternion.identity);
             _totalCount.Add(enemy);
 
             //  生成数制限
