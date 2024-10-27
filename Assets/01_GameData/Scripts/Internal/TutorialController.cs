@@ -104,7 +104,7 @@ public class TutorialController : MonoBehaviour
                 .SetLoops(_dragLoops, LoopType.Restart)
                 .SetOptions(true)
                 .SetLink(_dragMouseTr.gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
         }
     }
 
@@ -171,7 +171,7 @@ public class TutorialController : MonoBehaviour
             await tr.DOMove(endPos, duration)
                 .SetEase(Ease.Linear)
                 .SetLink(tr.gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
         }
         async UniTask MouseAnime()
         {
@@ -196,7 +196,7 @@ public class TutorialController : MonoBehaviour
             await _shotMouseClick.transform.DOScale(endScale, _scaleDuration)
               .SetEase(Ease.OutBack)
               .SetLink(_shotMouseClick)
-              .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+              .ToUniTask(Tasks.TCB, cancellationToken: ct);
         }
     }
 

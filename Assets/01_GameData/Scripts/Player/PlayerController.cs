@@ -65,6 +65,13 @@ public class PlayerController : MonoBehaviour
 
     // ---------------------------- Field
     private static PlayerController _instance;
+    private GameObject _obj = null;
+    private Transform _tr = null;
+    private Rigidbody2D _rb2d = null;
+    private PlayerInput _input = null;
+    private SpriteRenderer _sr = null;
+
+
     //  インプットシステム
     private readonly string DEFAULT_MAP = "Player", PAUSE_MAP = "Pause";
     private Vector3 _lookPos = Vector3.zero;
@@ -76,7 +83,6 @@ public class PlayerController : MonoBehaviour
     private bool _canDamageTaken = true;
 
     //  移動
-    private Rigidbody2D _rb = null;
     private Vector2 _moveForce;
 
     //  フック
@@ -107,6 +113,10 @@ public class PlayerController : MonoBehaviour
 
     // ---------------------------- Property
     public static PlayerController Instance => _instance;
+    public GameObject Obj => _obj;
+    public Transform Tr => _tr;
+
+    public Rigidbody2D RB2D => _rb2d;
     public InputActionPhase ShotPhase { get => _shotPhase; set => _shotPhase = value; }
     public int MaxHP => _maxHp;
 
@@ -131,7 +141,11 @@ public class PlayerController : MonoBehaviour
     {
         //  キャッシュ
         _instance = this;
-        _rb = GetComponent<Rigidbody2D>();
+        _obj = gameObject;
+        _tr = transform;
+        _rb2d = GetComponent<Rigidbody2D>();
+        _input = GetComponent<PlayerInput>();
+        _sr = GetComponent<SpriteRenderer>();
 
         //  ロープ先端位置 種類名保存
         foreach (var type in Enum.GetValues(typeof(LineType)).Cast<LineType>())
@@ -154,7 +168,7 @@ public class PlayerController : MonoBehaviour
     {
         if (IsDefault())   //  ポーズ中更新停止
         {
-            _rb.AddForce(_moveForce);   //  加速出力//  移動出力
+            _rb2d.AddForce(_moveForce);   //  加速出力//  移動出力
         }
     }
 
@@ -179,7 +193,7 @@ public class PlayerController : MonoBehaviour
     public void OnLook(InputAction.CallbackContext ctx)
     {
         //  ロープ方向入力
-        _lookPos = transform.position + (Vector3)ctx.ReadValue<Vector2>();
+        _lookPos = _tr.position + (Vector3)ctx.ReadValue<Vector2>();
     }
 
     /// <summary>
@@ -231,7 +245,8 @@ public class PlayerController : MonoBehaviour
     public void OnControlsChanged()
     {
         //  Scheme文字列をEnumで判定
-        var schemeString = GetComponent<PlayerInput>().currentControlScheme;
+        if (_input == null) return; //  PlayerInputのキャッシュをしてから行う
+        var schemeString = _input.currentControlScheme;
 
         //  入力方法分岐
         if (schemeString == Helper.Scheme.KeyboardMouse.ToString())
@@ -278,7 +293,7 @@ public class PlayerController : MonoBehaviour
             void Implement(int time, string actionMap)
             {
                 Time.timeScale = time;  //  タイムスケール
-                GetComponent<PlayerInput>().SwitchCurrentActionMap(actionMap); //  アクションマップ
+                _input.SwitchCurrentActionMap(actionMap); //  アクションマップ
             }
 
         })
@@ -305,7 +320,7 @@ public class PlayerController : MonoBehaviour
                 _isHookAnimation = false;
             }
             //  色初期化
-            GetComponent<SpriteRenderer>().color = _initColor;
+            _sr.color = _initColor;
 
         }, AwaitOperation.Switch)
         .RegisterTo(destroyCancellationToken);
@@ -316,11 +331,11 @@ public class PlayerController : MonoBehaviour
             await DOVirtual.Float(0, 1, _hookAnimeDuration
                 , (head) =>
                 {
-                    _headPos[LineType.ROPE] = Vector3.Lerp(transform.position, _ropeHeadPos, head);
+                    _headPos[LineType.ROPE] = Vector3.Lerp(_tr.position, _ropeHeadPos, head);
                 })
-                .SetLink(gameObject)
+                .SetLink(_obj)
                 .SetEase(Ease.Linear)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
 
 
             //  接触エフェクト
@@ -340,8 +355,8 @@ public class PlayerController : MonoBehaviour
                 })
                 .SetEase(Ease.Linear)
                 .SetLoops(1, LoopType.Yoyo)
-                .SetLink(gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .SetLink(_obj)
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
 
                 //  状態を戻す
                 _isFirstHookProcess = false;
@@ -360,11 +375,11 @@ public class PlayerController : MonoBehaviour
             await DOVirtual.Float(1, 0, _hookAnimeDuration
                 , (head) =>
                 {
-                    _headPos[LineType.ROPE] = Vector3.Lerp(transform.position, _ropeHeadPos, head);
+                    _headPos[LineType.ROPE] = Vector3.Lerp(_tr.position, _ropeHeadPos, head);
                 })
-                .SetLink(gameObject)
+                .SetLink(_obj)
                 .SetEase(Ease.Linear)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
         }
     }
 
@@ -387,8 +402,8 @@ public class PlayerController : MonoBehaviour
                 //  フックショット時バウンド制御
                 if (_isHookHit)
                 {
-                    var dir = ((Vector2)transform.position - contactPoint).normalized;
-                    _rb.AddForce(dir * _boundForce);
+                    var dir = ((Vector2)_tr.position - contactPoint).normalized;
+                    _rb2d.AddForce(dir * _boundForce);
                 }
                 Instantiate(_boundEffect, contactPoint, Quaternion.identity);
             }
@@ -409,7 +424,7 @@ public class PlayerController : MonoBehaviour
             //  敵
             if (obj.CompareTag(TagName.Enemy))
             {
-                var damage = obj.GetComponent<IEnemyDamageable>().Damage(gameObject);
+                var damage = obj.GetComponent<IEnemyDamageable>().Damage();
                 if (damage != 0)
                 {
                     await DamageTaken(damage, ct);
@@ -418,7 +433,7 @@ public class PlayerController : MonoBehaviour
             //  リスポーン
             else if (obj.CompareTag(TagName.Respawn))
             {
-                transform.position = _saveRespawnPos;
+                _tr.position = _saveRespawnPos;
                 await DamageTaken(1, ct);
             }
 
@@ -468,7 +483,7 @@ public class PlayerController : MonoBehaviour
             //  敵
             if (obj.CompareTag(TagName.Enemy))
             {
-                await DamageTaken(obj.GetComponent<IEnemyDamageable>().Damage(gameObject), ct);
+                await DamageTaken(obj.GetComponent<IEnemyDamageable>().Damage(), ct);
             }
 
         }, AwaitOperation.Drop)
@@ -491,7 +506,7 @@ public class PlayerController : MonoBehaviour
     private void GroundDecision()
     {
         //  レイ生成
-        var ray = new Ray2D(transform.position, new Vector2(0, -1));
+        var ray = new Ray2D(_tr.position, new Vector2(0, -1));
         var hit = Physics2D.Raycast
             (ray.origin
             , ray.direction
@@ -507,7 +522,7 @@ public class PlayerController : MonoBehaviour
             if (obj.CompareTag(TagName.Belt))
             {
                 var add = obj.GetComponent<ConveyorController>().GetSpeed();
-                _rb.AddForce(new Vector2(add, 0));
+                _rb2d.AddForce(new Vector2(add, 0));
             }
         }
     }
@@ -531,21 +546,20 @@ public class PlayerController : MonoBehaviour
                 //  ダメージ処理
                 _hp.Value -= damage;    //  ダメージ
                 _damageClip?.Invoke();  //  効果音
-                Instantiate(_damageEffect, transform.position, Quaternion.identity) //  エフェクト
+                Instantiate(_damageEffect, _tr.position, Quaternion.identity) //  エフェクト
                     .transform.SetParent(transform);    //  子オブジェクトに設定
 
                 //  点滅処理
-                var sr = GetComponent<SpriteRenderer>();
-                await DOVirtual.Color(Color.black, sr.color
+                await DOVirtual.Color(Color.black, _sr.color
                 , _flashingTime
                 , (value) =>
                 {
-                    sr.color = value;
+                    _sr.color = value;
                 })
                 .SetEase(Ease.Linear)
                 .SetLoops(_flashingLimit, LoopType.Yoyo)
-                .SetLink(gameObject)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .SetLink(_obj)
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
             finally
             {
@@ -584,7 +598,7 @@ public class PlayerController : MonoBehaviour
     private void HookActive()
     {
         //  パラメータ取得
-        var playerPos = transform.position; //  プレイヤー位置
+        var playerPos = _tr.position; //  プレイヤー位置
         var type = GetHitColliderType();    //  接触コライダーの種類
 
         //  接触判定
@@ -686,7 +700,7 @@ public class PlayerController : MonoBehaviour
     /// <param name="type">接触している</param>
     private void HookInactive()
     {
-        var playerPos = transform.position;
+        var playerPos = _tr.position;
         var type = GetHitColliderType();
 
         //  先端位置代入
@@ -742,7 +756,7 @@ public class PlayerController : MonoBehaviour
     private HitCollider GetHitColliderType()
     {
         //  レイ描写
-        var playerPos = transform.position;
+        var playerPos = _tr.position;
         var rayDir = (_lookPos - playerPos).normalized;
         Debug.DrawRay(playerPos, rayDir * _wireDis, Color.green);
 
@@ -788,13 +802,13 @@ public class PlayerController : MonoBehaviour
             {
                 //  表示可否
                 var decision = IsDefault() && !Tasks.IsFade;
-                var headPos = decision ? _headPos[type] : transform.position;
+                var headPos = decision ? _headPos[type] : _tr.position;
                 //  アニメーション終了判定
-                var indicatorHeadPos = !_isHookAnimation ? headPos : transform.position;
+                var indicatorHeadPos = !_isHookAnimation ? headPos : _tr.position;
                 //  ロープタイプ判定
                 var typeHeadPos = type == LineType.ROPE ? headPos : indicatorHeadPos;
                 //  位置更新
-                line.SetPositions(new Vector3[] { transform.position, typeHeadPos });
+                line.SetPositions(new Vector3[] { _tr.position, typeHeadPos });
             }
         }
     }

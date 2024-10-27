@@ -18,6 +18,7 @@ namespace Helper
         private static readonly float FADE_TIME = 2;
         private static bool _isFade = false;
         // ---------------------------- Property
+        public static TweenCancelBehaviour TCB => TweenCancelBehaviour.KillAndCancelAwait;
         public static bool IsFade => _isFade;
 
         public static UnityEvent FadeClip { set => _fadeClip = value; }
