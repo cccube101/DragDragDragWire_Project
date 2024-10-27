@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Helper;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -34,7 +35,7 @@ public class FloorChanger : GimmickBase
         _floorsObjects[0].SetActive(true);
 
         //  フロア切換え開始
-        await Helper.Tasks.Canceled(StartEvent(destroyCancellationToken));
+        await Tasks.Canceled(StartEvent(destroyCancellationToken));
     }
 
     // ---------------------------- PrivateMethod
@@ -59,10 +60,10 @@ public class FloorChanger : GimmickBase
                 })
                 .SetEase(Ease.Linear)
                 .SetLink(floor.Key)
-                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                .ToUniTask(Tasks.TCB, cancellationToken: ct);
 
                 //  切換えまで待機
-                await Helper.Tasks.DelayTime(_waitTime, ct);
+                await Tasks.DelayTime(_waitTime, ct);
 
                 //  切換え処理
                 var tasks = new List<UniTask>()
@@ -80,7 +81,7 @@ public class FloorChanger : GimmickBase
                         .SetEase(Ease.Linear)
                         .SetLoops(_loopTime, LoopType.Yoyo)
                         .SetLink(floor.Key)
-                        .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                        .ToUniTask(Tasks.TCB, cancellationToken: ct);
                 }
                 async UniTask PlayClip()
                 {
@@ -88,7 +89,7 @@ public class FloorChanger : GimmickBase
                     for (var i = 0; i < _loopTime / 2 + 1; i++)
                     {
                         _alertClip?.Invoke();
-                        await Helper.Tasks.DelayTime(_duration * 2, ct);
+                        await Tasks.DelayTime(_duration * 2, ct);
                     }
                 }
                 await UniTask.WhenAll(tasks);

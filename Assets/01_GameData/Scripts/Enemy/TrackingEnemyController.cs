@@ -44,21 +44,22 @@ public class TrackingEnemyController : EnemyBase
         //  画面内にオブジェクトがあるかどうか
         if (_sr.isVisible)
         {
+            //  プレイヤー位置取得
+            var playerPos = PlayerController.Instance.Tr.position;
             //  追従移動
             if (_move == Helper.Switch.ON)
             {
-                _agent.SetDestination(PlayerController.Instance.transform.position);
+                _agent.SetDestination(playerPos);
             }
             //  プレイヤー方向へ回転
-            var playerPos = PlayerController.Instance.transform.position;   //  プレイヤー位置取得
-            var dir = Vector3.Lerp(playerPos, transform.position, LOOK);    //  方向決定
+            var dir = Vector3.Lerp(playerPos, _tr.position, LOOK);    //  方向決定
             var diff = (playerPos - dir).normalized;    //  ノーマライズ処理
-            transform.rotation = Quaternion.FromToRotation(Vector3.up, diff);
+            _tr.rotation = Quaternion.FromToRotation(Vector3.up, diff);
         }
         else
         {
             //  停止
-            _rb.Sleep();
+            _rb2d.Sleep();
         }
     }
 }

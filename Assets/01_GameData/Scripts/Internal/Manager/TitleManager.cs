@@ -182,10 +182,11 @@ public class TitleManager : MonoBehaviour
     /// <returns>ゲーム終了キャンバス表示非表示処理</returns>
     public async UniTask FadeQuitCanvas(bool isOpen, float from, float to, CancellationToken ct)
     {
+        var quitCanvasObj = _quitCanvas.gameObject;
         //  状態更新
         _isMoveCanvas = isOpen;
         _stageSelectCanvasGroup.blocksRaycasts = !isOpen;
-        _quitCanvas.gameObject.SetActive(true);
+        quitCanvasObj.SetActive(true);
 
         //  フェード
         await DOVirtual.Float(from, to, _quitFadeDuration, fade =>
@@ -193,11 +194,11 @@ public class TitleManager : MonoBehaviour
             _quitCanvas.alpha = fade;
         })
         .SetEase(Ease.Linear)
-        .SetLink(_quitCanvas.gameObject)
-        .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+        .SetLink(quitCanvasObj)
+        .ToUniTask(Tasks.TCB, cancellationToken: ct);
 
         //  状態更新
-        _quitCanvas.gameObject.SetActive(isOpen);
+        quitCanvasObj.SetActive(isOpen);
     }
 
     // ---------------------------- PrivateMethod
@@ -258,7 +259,7 @@ public class TitleManager : MonoBehaviour
                             .SetEase(Ease.OutBack)
                             .SetUpdate(true)
                             .SetLink(_pressAny.gameObject)
-                            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                            .ToUniTask(Tasks.TCB, cancellationToken: ct);
 
                     //  すぐにキャンバスを移動せずに待機
                     await Tasks.DelayTime(_pressAnyDelay, ct);
@@ -290,7 +291,7 @@ public class TitleManager : MonoBehaviour
                             .SetEase(Ease.OutBack)
                             .SetLink(text.gameObject)
                             .SetUpdate(true)
-                            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                            .ToUniTask(Tasks.TCB, cancellationToken: ct);
                     }
                     //  スコアボードサイズ
                     async UniTask ScoreBoardSize(float size)
@@ -299,7 +300,7 @@ public class TitleManager : MonoBehaviour
                             .SetEase(Ease.OutBack)
                             .SetLink(_scoreBoard.gameObject)
                             .SetUpdate(true)
-                            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                            .ToUniTask(Tasks.TCB, cancellationToken: ct);
                     }
 
                     //  UI判定再開
@@ -323,7 +324,7 @@ public class TitleManager : MonoBehaviour
                     Audio.SaveVolume();
 
                     //  オーディオフレーム位置初期化
-                    await MoveY(_volumeFrame.gameObject, _volumeFrame, _volumeFramePos.x, _volumeFrameDuration, _volumeMoveEase, ct);
+                    await MoveY(_volumeFrame, _volumeFramePos.x, _volumeFrameDuration, _volumeMoveEase, ct);
 
                     //  テキストアイドルアニメーション再生
                     _pressAnyIdleAnime = PressAnyAnimation();
@@ -351,7 +352,7 @@ public class TitleManager : MonoBehaviour
                 //  移動先指定
                 var pos = _isVolumeFrameUp ? _volumeFramePos.y : _volumeFramePos.x;
                 //  移動
-                await MoveY(_volumeFrame.gameObject, _volumeFrame, pos, _volumeFrameDuration, _volumeMoveEase, ct);
+                await MoveY(_volumeFrame, pos, _volumeFrameDuration, _volumeMoveEase, ct);
 
             }, AwaitOperation.Drop)
             .RegisterTo(destroyCancellationToken);
@@ -374,7 +375,7 @@ public class TitleManager : MonoBehaviour
     private async UniTask StartEvent(CancellationToken ct)
     {
         //  オプション位置初期化
-        await MoveY(_stageCanvas, _stageRect, -Base.HEIGHT, 0, Ease.Linear, ct);
+        await MoveY(_stageRect, -Base.HEIGHT, 0, Ease.Linear, ct);
 
         //  フェードアウト
         await Tasks.FadeOut(ct);
@@ -400,26 +401,27 @@ public class TitleManager : MonoBehaviour
         AnimationLoop(ct).Forget();
         async UniTask AnimationLoop(CancellationToken ct)
         {
-            await Helper.Tasks.DelayTime(_particleDuration, ct);
+            var lineRectObj = _lineRect.gameObject;
+            await Tasks.DelayTime(_particleDuration, ct);
             while (true)
             {
                 //  フック部分アニメーション
                 await _lineRect.DOAnchorPosX(_lineMinMax.y, _animeDuration)
                     .SetEase(Ease.Linear)
-                    .SetLink(_lineRect.gameObject)
-                    .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                    .SetLink(lineRectObj)
+                    .ToUniTask(Tasks.TCB, cancellationToken: ct);
 
                 //  先端部分でエフェクト再生
                 _headParticle.Play();
 
                 //  待機処理
-                await Helper.Tasks.DelayTime(_particleDuration, ct);
+                await Tasks.DelayTime(_particleDuration, ct);
 
                 //  フック部分戻すアニメーション
                 await _lineRect.DOAnchorPosX(_lineMinMax.x, _animeDuration)
                     .SetEase(Ease.Linear)
-                    .SetLink(_lineRect.gameObject)
-                    .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+                    .SetLink(lineRectObj)
+                    .ToUniTask(Tasks.TCB, cancellationToken: ct);
             }
         }
     }
@@ -451,9 +453,9 @@ public class TitleManager : MonoBehaviour
         var moveTasks = new List<UniTask>()
             {
                 //  タイトルロゴ移動
-                MoveY(_logoCanvas,_logoRect, logoPos, _canvasMoveDuration, _canvasMoveEase, ct),
+                MoveY(_logoRect, logoPos, _canvasMoveDuration, _canvasMoveEase, ct),
                 //  ステージ選択画面移動
-                MoveY(_stageCanvas, _stageRect, stagePos, _canvasMoveDuration, _canvasMoveEase, ct),
+                MoveY( _stageRect, stagePos, _canvasMoveDuration, _canvasMoveEase, ct),
             };
         await UniTask.WhenAll(moveTasks);
     }
@@ -469,8 +471,7 @@ public class TitleManager : MonoBehaviour
     /// <param name="ct">キャンセルトークン</param>
     /// <returns>移動処理</returns>
     private async UniTask MoveY
-        (GameObject obj
-        , RectTransform rect
+        (RectTransform rect
         , float toValue
         , float duration
         , Ease ease
@@ -479,7 +480,7 @@ public class TitleManager : MonoBehaviour
         await rect.DOAnchorPosY(toValue, duration)
             .SetEase(ease)
             .SetUpdate(true)
-            .SetLink(obj)
-            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+            .SetLink(rect.gameObject)
+            .ToUniTask(Tasks.TCB, cancellationToken: ct);
     }
 }

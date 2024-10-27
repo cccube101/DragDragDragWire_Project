@@ -38,11 +38,11 @@ public class MoveFloorController : GimmickBase
         //  移動処理
         //  パスを通り繰り返し移動していく
         //  PathType変更で経路が変更される
-        await transform.DOPath(positions, _time, _pathType, PathMode.Sidescroller2D)
+        await _tr.DOPath(positions, _time, _pathType, PathMode.Sidescroller2D)
             .SetEase(Ease.Linear)
             .SetLoops(-1, _loopType)
             .SetOptions(_setOption)
-            .SetLink(gameObject)
-            .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, cancellationToken: ct);
+            .SetLink(_obj)
+            .ToUniTask(Helper.Tasks.TCB, cancellationToken: ct);
     }
 }

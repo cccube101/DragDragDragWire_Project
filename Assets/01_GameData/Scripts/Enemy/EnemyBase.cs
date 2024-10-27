@@ -12,8 +12,10 @@ public class EnemyBase : MonoBehaviour, IEnemyDamageable
     // ---------------------------- Field
     protected IEnemyDamageable _enemyDamageable;
 
+    protected GameObject _obj = null;
+    protected Transform _tr = null;
     protected SpriteRenderer _sr = null;
-    protected Rigidbody2D _rb = null;
+    protected Rigidbody2D _rb2d = null;
 
     // ---------------------------- UnityMessage
     public virtual void Start()
@@ -29,22 +31,32 @@ public class EnemyBase : MonoBehaviour, IEnemyDamageable
     /// </summary>
     public void StartEvent()
     {
+        _obj = gameObject;
+        _tr = transform;
         _sr = GetComponent<SpriteRenderer>();
-        _rb = GetComponent<Rigidbody2D>();
+        _rb2d = GetComponent<Rigidbody2D>();
     }
 
     /// <summary>
     /// プレイヤーへのダメージ
     /// </summary>
-    /// <param name="player">プレイヤーオブジェクト</param>
-    /// <returns></returns>
-    public virtual int Damage(GameObject player)
+    /// <returns>ダメージ量</returns>
+    public virtual int Damage()
     {
-        //  ノックバック
-        var dir = (player.transform.position - transform.position).normalized;
-        player.GetComponent<Rigidbody2D>().AddForce(dir * _knockBackForce);
+        KnockBackPlayer();
 
         return _damage;
+    }
+
+    /// <summary>
+    /// ノックバック
+    /// </summary>
+    public void KnockBackPlayer()
+    {
+        //  ノックバック
+        var player = PlayerController.Instance;
+        var dir = (player.Tr.position - _tr.position).normalized;
+        player.RB2D.AddForce(dir * _knockBackForce);
     }
 
     /// <summary>
@@ -53,9 +65,9 @@ public class EnemyBase : MonoBehaviour, IEnemyDamageable
     public virtual void Die()
     {
         //  エフェクト生成
-        Instantiate(_knockEffect, transform.position, Quaternion.identity);
+        Instantiate(_knockEffect, _tr.position, Quaternion.identity);
 
         //  削除
-        Destroy(gameObject);
+        Destroy(_obj);
     }
 }

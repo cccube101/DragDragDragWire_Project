@@ -14,6 +14,9 @@ public class ShooterEnemyController : EnemyBase
     [SerializeField, Required, BoxGroup("弾パラメータ")] private float _generationInterval;
 
     // ---------------------------- Field
+    //  キャッシュ
+    private Transform _muzzleTr = null;
+
     //  追従
     private readonly float LOOK = 0.8f;
 
@@ -24,6 +27,7 @@ public class ShooterEnemyController : EnemyBase
     public override async void Start()
     {
         StartEvent();
+        _muzzleTr = _muzzle.transform;
 
         //  射撃サイクル開始
         await Helper.Tasks.Canceled(ShooterCycle(destroyCancellationToken));
@@ -54,11 +58,11 @@ public class ShooterEnemyController : EnemyBase
                 for (int i = 0; i < _generationVolume; i++)
                 {
                     //  パラメータ生成
-                    var bullet = Instantiate(_bulletObj, transform.position, Quaternion.identity);
-                    var dir = _muzzle.transform.position - transform.position;
+                    var bullet = Instantiate(_bulletObj, _tr.position, Quaternion.identity);
+                    var dir = _muzzleTr.position - _tr.position;
 
                     //  弾方向指定
-                    bullet.GetComponent<BulletController>().Dir = (dir, transform.rotation);
+                    bullet.GetComponent<BulletController>().Dir = (dir, _tr.rotation);
 
                     //  待機
                     await Helper.Tasks.DelayTime(_generationRate, ct);
@@ -78,17 +82,17 @@ public class ShooterEnemyController : EnemyBase
         //  画面内にオブジェクトがあるかどうか
         if (_sr.isVisible)
         {
-            var playerPos = PlayerController.Instance.transform.position;   //  プレイヤー位置取得
+            var playerPos = PlayerController.Instance.Tr.position;   //  プレイヤー位置取得
 
             //  プレイヤー方向へ回転
-            var dir = Vector3.Lerp(playerPos, transform.position, LOOK);
+            var dir = Vector3.Lerp(playerPos, _tr.position, LOOK);
             var diff = (playerPos - dir).normalized;
-            transform.rotation = Quaternion.FromToRotation(Vector3.up, diff);
+            _tr.rotation = Quaternion.FromToRotation(Vector3.up, diff);
         }
         else
         {
             //  停止
-            _rb.Sleep();
+            _rb2d.Sleep();
         }
     }
 }

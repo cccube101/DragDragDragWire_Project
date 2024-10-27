@@ -21,7 +21,7 @@ public class BulletController : EnemyBase
         set
         {
             _addDir = value.Dir;
-            transform.rotation = value.Rotation;
+            _tr.rotation = value.Rotation;
         }
     }
 
@@ -32,13 +32,13 @@ public class BulletController : EnemyBase
         StartEvent();
 
         //  射撃音再生
-        Instantiate(_shootClip, transform.position, Quaternion.identity);
+        Instantiate(_shootClip, _tr.position, Quaternion.identity);
     }
 
     private void Update()
     {
         //  移動処理
-        transform.position += _addDir * _moveSpeed * Time.deltaTime;
+        _tr.position += _addDir * _moveSpeed * Time.deltaTime;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -64,10 +64,10 @@ public class BulletController : EnemyBase
     public override void Die()
     {
         //  エフェクト生成
-        Instantiate(_hitClip, transform.position, Quaternion.identity);
-        Instantiate(_knockEffect, transform.position, Quaternion.identity);
+        Instantiate(_hitClip, _tr.position, Quaternion.identity);
+        Instantiate(_knockEffect, _tr.position, Quaternion.identity);
 
         //  削除
-        Destroy(gameObject);
+        Destroy(_obj);
     }
 }
