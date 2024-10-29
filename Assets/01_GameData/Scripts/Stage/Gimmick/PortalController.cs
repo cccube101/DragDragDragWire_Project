@@ -107,7 +107,7 @@ public class PortalController : GimmickBase
         if (_gizmoSwitch == Switch.ON)
         {
             Gizmos.color = _color;
-            Gizmos.DrawWireSphere(_tr.position, _tr.localScale.y);
+            Gizmos.DrawWireSphere(transform.position, transform.localScale.y);
         }
     }
 

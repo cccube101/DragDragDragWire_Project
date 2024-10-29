@@ -21,7 +21,7 @@ public class BulletController : EnemyBase
         set
         {
             _addDir = value.Dir;
-            _tr.rotation = value.Rotation;
+            transform.rotation = value.Rotation;
         }
     }
 
@@ -38,7 +38,7 @@ public class BulletController : EnemyBase
     private void Update()
     {
         //  à⁄ìÆèàóù
-        _tr.position += _addDir * _moveSpeed * Time.deltaTime;
+        _tr.position += _moveSpeed * Time.deltaTime * _addDir;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
