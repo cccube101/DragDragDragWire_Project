@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.Audio;
 using Alchemy.Inspector;
 using Helper;
-using UnityEngine.SceneManagement;
 
 
 public class AudioManager : MonoBehaviour

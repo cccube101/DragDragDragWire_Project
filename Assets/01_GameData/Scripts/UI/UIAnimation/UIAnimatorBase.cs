@@ -56,6 +56,7 @@ public class UIAnimatorBase : MonoBehaviour
     {
         //  アニメーターステート監視
         if (_animator == null) return;
+
         _animator.GetBehaviour<ObservableStateMachineTrigger>()
             .OnStateEnterAsObservable()
             .Subscribe(state =>

@@ -112,7 +112,7 @@ AudioMixerGroupController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Tile
+  m_Name: Title
   m_AudioMixer: {fileID: 24100000}
   m_GroupID: 8996ebb4bef0fa34f8dc15daeac63f00
   m_Children: []
