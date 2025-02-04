@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Audio;
 using Alchemy.Inspector;
 using Helper;
+using UnityEngine.SceneManagement;  //  消すな！！！使ってる！！
 
 
 public class AudioManager : MonoBehaviour
@@ -23,8 +24,8 @@ public class AudioManager : MonoBehaviour
             Audio.CreateParam();   //  デバッグ用にパラメータを初期化
             Debug.Log("AudioParam生成");
 #else
-            //  データが見つからない場合は初期化シーンに移動
-            SceneManager.LoadScene((int)SceneName.BaseInit);
+        //  データが見つからない場合は初期化シーンに移動
+        SceneManager.LoadScene((int)SceneName.BaseInit);
 #endif
         }
 
