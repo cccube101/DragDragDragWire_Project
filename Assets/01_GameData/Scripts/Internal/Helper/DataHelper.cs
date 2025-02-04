@@ -27,7 +27,7 @@ namespace Helper
         }
 
         // ---------------------------- Field
-        private static readonly float LIMIT_TIME = 80;
+        private static readonly float LIMIT_TIME = 90;
 
         private static readonly string IS_ONETIME_INIT = "IsOnetimeInit";
         private static readonly string COIN = "Coin";
@@ -149,6 +149,21 @@ namespace Helper
         }
 
         /// <summary>
+        /// データ削除
+        /// </summary>
+        public static void DeleteData()
+        {
+            PlayerPrefs.DeleteAll();
+            _scoreList.Clear();
+            _topTimeList.Clear();
+            TotalScore = 0;
+            AverageTime = 0;
+            ScoreInit();
+        }
+
+        private static bool _isUnityRoomApi = true;
+
+        /// <summary>
         /// トータルスコア計算
         /// </summary>
         private static void TotalScoreCalculation()
@@ -170,8 +185,11 @@ namespace Helper
             AverageTime = averageTime / TopTimeList.Count;  //  更新
 
             //  UnityRoomランキング更新
-            UnityroomApiClient.Instance.SendScore(1, TotalScore, ScoreboardWriteMode.Always);
-            UnityroomApiClient.Instance.SendScore(2, AverageTime, ScoreboardWriteMode.Always);
+            if (_isUnityRoomApi)
+            {
+                UnityroomApiClient.Instance.SendScore(1, TotalScore, ScoreboardWriteMode.Always);
+                UnityroomApiClient.Instance.SendScore(2, AverageTime, ScoreboardWriteMode.Always);
+            }
         }
 
         /// <summary>

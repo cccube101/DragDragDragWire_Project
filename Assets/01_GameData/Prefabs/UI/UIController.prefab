@@ -319,7 +319,7 @@ MonoBehaviour:
   - {fileID: 3724896924705802774}
   - {fileID: 1108761502440224563}
   _fadeBgmVolume: 0.2
-  _timeScoreLimit: {x: 65, y: 40, z: 10}
+  _timeScoreLimit: {x: 75, y: 30, z: 10}
   _timeScore: {x: 300, y: 200, z: 100}
   _resultWait: 1
   _clearUI:

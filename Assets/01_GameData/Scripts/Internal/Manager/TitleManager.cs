@@ -118,6 +118,13 @@ public class TitleManager : MonoBehaviour
         await Tasks.Canceled(StartEvent(destroyCancellationToken));
     }
 
+#if UNITY_EDITOR
+    private void Update()
+    {
+
+    }
+#endif
+
     private void OnGUI()
     {
         if (_GUI == Helper.Switch.ON)
@@ -357,7 +364,7 @@ public class TitleManager : MonoBehaviour
             }, AwaitOperation.Drop)
             .RegisterTo(destroyCancellationToken);
 
-        _quitButton.OnClickAsObservable()
+        _quitButton?.OnClickAsObservable()
              .SubscribeAwait(async (_, ct) =>
              {
                  // I—¹‰æ–Ê•\Ž¦

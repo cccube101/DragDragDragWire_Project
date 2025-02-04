@@ -496,7 +496,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// デフォルト判定
     /// </summary>
-    /// <returns></returns>
+    /// <returns>デフォルト状態</returns>
     private bool IsDefault() => GameManager.Instance.State.CurrentValue == GameState.DEFAULT;
 
 
